@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -40,7 +41,7 @@ class HomePage extends StatelessWidget {
           if (context.watch<HomeProvider>().isLoading)
             const LinearProgressIndicator(),
           Expanded(
-            child: _buildTable(context),
+            child: _buildList(context),
           ),
           _buildStatusBar(context),
         ],
@@ -85,7 +86,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildTable(BuildContext context) {
+  Widget _buildList(BuildContext context) {
     final provider = context.watch<HomeProvider>();
     final items = provider.filteredItems;
 
@@ -111,75 +112,144 @@ class HomePage extends StatelessWidget {
       return const Center(child: Text('No matching ports/processes found.'));
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          sortColumnIndex: provider.sortColumnIndex,
-          sortAscending: provider.sortAscending,
-          columns: [
-            DataColumn(
-              label: const Text('Port'),
-              onSort: (index, ascending) => provider.sort(index, ascending),
-              numeric: true,
-            ),
-            DataColumn(
-              label: const Text('Protocol'),
-              onSort: (index, ascending) => provider.sort(index, ascending),
-            ),
-            DataColumn(
-              label: const Text('PID'),
-              onSort: (index, ascending) => provider.sort(index, ascending),
-              numeric: true,
-            ),
-            DataColumn(
-              label: const Text('Process Name'),
-              onSort: (index, ascending) => provider.sort(index, ascending),
-            ),
-            const DataColumn(label: Text('Local Address')),
-            const DataColumn(label: Text('Remote Address')),
-            const DataColumn(label: Text('State')),
-            const DataColumn(label: Text('Actions')),
-          ],
-          rows: items.map((item) {
-            final isListening = item.state == 'LISTENING';
-            return DataRow(
-              cells: [
-                DataCell(Text(item.port.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold))),
-                DataCell(Text(item.protocol)),
-                DataCell(Text(item.pid.toString())),
-                DataCell(Text(item.processName ?? 'Unknown')),
-                DataCell(Text(item.localAddress)),
-                DataCell(Text(item.remoteAddress)),
-                DataCell(
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isListening ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: isListening ? Colors.green : Colors.grey),
-                    ),
-                    child: Text(
-                      item.state,
-                      style: TextStyle(
-                        color: isListening ? Colors.green[700] : Colors.grey[700],
-                        fontSize: 12,
-                      ),
-                    ),
+    return Column(
+      children: [
+        _buildHeader(context),
+        const Divider(height: 1),
+        Expanded(
+          child: ListView.builder(
+            itemCount: items.length,
+            // Fixed height for better performance
+            itemExtent: 48.0,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return _buildListItem(context, item, index % 2 == 0);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final provider = context.watch<HomeProvider>();
+
+    Widget buildHeaderCell(String label, int flex, int columnIndex) {
+      final isSorted = provider.sortColumnIndex == columnIndex;
+      return Expanded(
+        flex: flex,
+        child: InkWell(
+          onTap: () {
+            // Toggle direction if already sorted by this column, otherwise default to ascending
+            final ascending = isSorted ? !provider.sortAscending : true;
+            provider.sort(columnIndex, ascending);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                DataCell(
-                  IconButton(
-                    icon: const Icon(Icons.delete_forever, color: Colors.red),
-                    tooltip: 'Kill Process',
-                    onPressed: () => _showKillConfirmDialog(context, item),
+                if (isSorted)
+                  Icon(
+                    provider.sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                    size: 16,
                   ),
-                ),
               ],
-            );
-          }).toList(),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      color: Colors.grey[100],
+      child: Row(
+        children: [
+          buildHeaderCell('Port', 2, 0),
+          buildHeaderCell('Proto', 2, 1),
+          buildHeaderCell('PID', 2, 2),
+          buildHeaderCell('Name', 4, 3),
+          const Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8.0), child: Text('Local Addr', style: TextStyle(fontWeight: FontWeight.bold)))),
+          const Expanded(flex: 3, child: Padding(padding: EdgeInsets.all(8.0), child: Text('Remote Addr', style: TextStyle(fontWeight: FontWeight.bold)))),
+          const Expanded(flex: 2, child: Padding(padding: EdgeInsets.all(8.0), child: Text('State', style: TextStyle(fontWeight: FontWeight.bold)))),
+          const Expanded(flex: 1, child: Padding(padding: EdgeInsets.all(8.0), child: Text('Action', style: TextStyle(fontWeight: FontWeight.bold)))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListItem(BuildContext context, PortProcessItem item, bool isEven) {
+    final isListening = item.state == 'LISTENING';
+
+    return Container(
+      height: 48.0, // Match itemExtent
+      color: isEven ? Colors.white : Colors.grey[50],
+      padding: const EdgeInsets.symmetric(vertical: 0), // Handled by alignment or height
+      child: Row(
+        children: [
+          Expanded(flex: 2, child: _buildCopyableCell(item.port.toString(), fontWeight: FontWeight.bold)),
+          Expanded(flex: 2, child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(item.protocol),
+          )),
+          Expanded(flex: 2, child: _buildCopyableCell(item.pid.toString())),
+          Expanded(flex: 4, child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Tooltip(
+              message: item.processName ?? 'Unknown',
+              child: Text(
+                item.processName ?? 'Unknown',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )),
+          Expanded(flex: 3, child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(item.localAddress, overflow: TextOverflow.ellipsis),
+          )),
+          Expanded(flex: 3, child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(item.remoteAddress, overflow: TextOverflow.ellipsis),
+          )),
+          Expanded(flex: 2, child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              item.state,
+              style: TextStyle(
+                color: isListening ? Colors.green[700] : Colors.grey[700],
+                fontSize: 12,
+              ),
+              overflow: TextOverflow.ellipsis
+            ),
+          )),
+          Expanded(flex: 1, child: IconButton(
+            icon: const Icon(Icons.delete_forever, color: Colors.red, size: 20),
+            tooltip: 'Kill Process',
+            onPressed: () => _showKillConfirmDialog(context, item),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCopyableCell(String text, {FontWeight? fontWeight}) {
+    return InkWell(
+      onTap: () {
+        Clipboard.setData(ClipboardData(text: text));
+        BotToast.showText(text: 'Copied $text to clipboard');
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        child: Text(
+          text,
+          style: TextStyle(fontWeight: fontWeight),
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );
