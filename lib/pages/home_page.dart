@@ -5,25 +5,72 @@ import 'package:provider/provider.dart';
 import '../models/port_process_item.dart';
 import '../providers/home_provider.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final Set<String> _selectedKeys = {};
+  DateTime? _lastRefreshTime;
+
+  String _getItemKey(PortProcessItem item) => '${item.pid}-${item.port}-${item.protocol}';
+
+  void _toggleSelection(PortProcessItem item) {
+    setState(() {
+      final key = _getItemKey(item);
+      if (_selectedKeys.contains(key)) {
+        _selectedKeys.remove(key);
+      } else {
+        _selectedKeys.add(key);
+      }
+    });
+  }
+
+  void _selectAll(List<PortProcessItem> items) {
+    setState(() {
+      // Check if all *currently visible* items are selected
+      final allVisibleSelected = items.every((item) => _selectedKeys.contains(_getItemKey(item)));
+
+      if (allVisibleSelected) {
+        // Deselect all visible items
+        for (var item in items) {
+          _selectedKeys.remove(_getItemKey(item));
+        }
+      } else {
+        // Select all visible items
+        for (var item in items) {
+          _selectedKeys.add(_getItemKey(item));
+        }
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final provider = context.watch<HomeProvider>();
+
+    // Clear selection if refresh time changed
+    if (provider.lastRefreshTime != _lastRefreshTime) {
+      _selectedKeys.clear();
+      _lastRefreshTime = provider.lastRefreshTime;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Port Sentinel'),
         actions: [
-          Consumer<HomeProvider>(
-            builder: (context, provider, _) => _buildRefreshArea(context, provider),
-          ),
+          _buildRefreshArea(context, provider),
         ],
       ),
       body: Column(
         children: [
           _buildFilterBar(context),
-          if (context.watch<HomeProvider>().isLoading)
+          if (provider.isLoading)
             const LinearProgressIndicator(),
+          if (_selectedKeys.isNotEmpty) _buildBatchActionBar(context),
           Expanded(
             child: _buildList(context),
           ),
@@ -148,7 +195,7 @@ class HomePage extends StatelessWidget {
 
     return Column(
       children: [
-        _buildHeader(context),
+        _buildHeader(context, items),
         const Divider(height: 1),
         Expanded(
           child: ListView.builder(
@@ -165,8 +212,46 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildBatchActionBar(BuildContext context) {
+    final provider = context.read<HomeProvider>();
+    final count = _selectedKeys.length;
+
+    return Container(
+      color: Colors.blue[50],
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Text('$count items selected', style: const TextStyle(fontWeight: FontWeight.bold)),
+          const Spacer(),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.delete_sweep, size: 18),
+            label: const Text('Batch Terminate'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => _showBatchKillDialog(context, provider),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, List<PortProcessItem> items) {
     final provider = context.watch<HomeProvider>();
+
+    // Checkbox state
+    bool? isAllSelected = false;
+    if (items.isNotEmpty) {
+      final selectedCountInItems = items.where((item) => _selectedKeys.contains(_getItemKey(item))).length;
+      if (selectedCountInItems == items.length) {
+        isAllSelected = true;
+      } else if (selectedCountInItems > 0) {
+        isAllSelected = null;
+      }
+    } else {
+      isAllSelected = false;
+    }
 
     Widget buildHeaderCell(String label, int flex, int columnIndex) {
       final isSorted = provider.sortColumnIndex == columnIndex;
@@ -205,6 +290,14 @@ class HomePage extends StatelessWidget {
       color: Colors.grey[100],
       child: Row(
         children: [
+          SizedBox(
+            width: 48,
+            child: Checkbox(
+              value: isAllSelected,
+              tristate: true,
+              onChanged: (val) => _selectAll(items),
+            ),
+          ),
           buildHeaderCell('Port', 2, 0),
           buildHeaderCell('Proto', 2, 1),
           buildHeaderCell('PID', 2, 2),
@@ -220,13 +313,21 @@ class HomePage extends StatelessWidget {
 
   Widget _buildListItem(BuildContext context, PortProcessItem item, bool isEven) {
     final isListening = item.state == 'LISTENING';
+    final isSelected = _selectedKeys.contains(_getItemKey(item));
 
     return Container(
       height: 48.0, // Match itemExtent
-      color: isEven ? Colors.white : Colors.grey[50],
+      color: isSelected ? Colors.blue.withOpacity(0.1) : (isEven ? Colors.white : Colors.grey[50]),
       padding: const EdgeInsets.symmetric(vertical: 0), // Handled by alignment or height
       child: Row(
         children: [
+          SizedBox(
+            width: 48,
+            child: Checkbox(
+              value: isSelected,
+              onChanged: (val) => _toggleSelection(item),
+            ),
+          ),
           Expanded(flex: 2, child: _buildCopyableCell(item.port.toString(), fontWeight: FontWeight.bold)),
           Expanded(flex: 2, child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -264,7 +365,7 @@ class HomePage extends StatelessWidget {
           )),
           Expanded(flex: 1, child: IconButton(
             icon: const Icon(Icons.delete_forever, color: Colors.red, size: 20),
-            tooltip: 'Kill Process',
+            tooltip: 'Terminate process (PID ${item.pid})',
             onPressed: () => _showKillConfirmDialog(context, item),
           )),
         ],
@@ -304,23 +405,57 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  bool _isSystemProcess(String? name) {
+    if (name == null) return false;
+    final lowerName = name.toLowerCase();
+    const systemNames = {
+      'system', 'svchost.exe', 'smss.exe', 'csrss.exe',
+      'wininit.exe', 'services.exe', 'lsass.exe', 'winlogon.exe',
+      'registry', 'spoolsv.exe'
+    };
+    return systemNames.contains(lowerName);
+  }
+
   void _showKillConfirmDialog(BuildContext context, PortProcessItem item) {
+    final isSystem = _isSystemProcess(item.processName);
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Kill Process?'),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red),
+              const SizedBox(width: 8),
+              const Text('Terminate Process?'),
+            ],
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (isSystem)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    border: Border.all(color: Colors.red),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'WARNING: This appears to be a critical system process. Terminating it may cause system instability or crash.',
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  ),
+                ),
               Text('Are you sure you want to terminate this process?'),
               const SizedBox(height: 16),
-              Text('PID: ${item.pid}'),
-              Text('Name: ${item.processName ?? "Unknown"}'),
-              Text('Port: ${item.port}'),
+              _buildInfoRow('PID', '${item.pid}'),
+              _buildInfoRow('Name', item.processName ?? "Unknown"),
+              _buildInfoRow('Port', '${item.port}'),
+              _buildInfoRow('Protocol', item.protocol),
               const SizedBox(height: 16),
-              const Text('This action cannot be undone.', style: TextStyle(color: Colors.red)),
+              const Text('This action cannot be undone.', style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic)),
             ],
           ),
           actions: [
@@ -344,7 +479,123 @@ class HomePage extends StatelessWidget {
                   BotToast.showText(text: 'Failed to terminate process ${item.pid}. Check permissions.');
                 }
               },
-              child: const Text('Kill Process'),
+              child: const Text('Terminate'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 60, child: Text('$label:', style: const TextStyle(fontWeight: FontWeight.bold))),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
+  }
+
+  void _showBatchKillDialog(BuildContext context, HomeProvider provider) {
+    // 1. Get selected items
+    final allItems = provider.filteredItems;
+    final selectedItems = allItems.where((item) => _selectedKeys.contains(_getItemKey(item))).toList();
+
+    if (selectedItems.isEmpty) return;
+
+    // 2. Extract unique PIDs
+    final uniquePids = selectedItems.map((e) => e.pid).toSet();
+
+    // 3. Check for system processes
+    final systemProcesses = selectedItems.where((e) => _isSystemProcess(e.processName)).toList();
+    final hasSystemProcess = systemProcesses.isNotEmpty;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.delete_sweep, color: Colors.red),
+              const SizedBox(width: 8),
+              const Text('Batch Terminate'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (hasSystemProcess)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    border: Border.all(color: Colors.red),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'WARNING: Selection contains ${systemProcesses.length} system process(es). Terminating them may cause system instability.',
+                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              Text('You are about to terminate ${uniquePids.length} process(es) affecting ${selectedItems.length} port(s).'),
+              const SizedBox(height: 16),
+              const Text('Selected PIDs:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 100),
+                child: SingleChildScrollView(
+                  child: Text(uniquePids.join(', ')),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('This action cannot be undone.', style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              onPressed: () async {
+                Navigator.of(context).pop();
+
+                final cancel = BotToast.showLoading();
+                int successCount = 0;
+                int failCount = 0;
+
+                // Kill processes
+                for (final pid in uniquePids) {
+                   final success = await provider.killProcess(pid);
+                   if (success) successCount++; else failCount++;
+                }
+
+                cancel();
+
+                // Clear selection
+                if (mounted) {
+                  setState(() {
+                    _selectedKeys.clear();
+                  });
+                }
+
+                BotToast.showText(
+                  text: 'Batch operation completed.\nSuccess: $successCount, Failed: $failCount',
+                  duration: const Duration(seconds: 4),
+                );
+
+                // Refresh list
+                if (mounted) {
+                  provider.refresh();
+                }
+              },
+              child: const Text('Terminate All'),
             ),
           ],
         );
