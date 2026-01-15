@@ -13,6 +13,10 @@ Flutter Windows Desktop application for monitoring ports and managing processes.
   - Includes safety confirmation dialog.
 - **Auto Refresh**: Optional automatic data update.
 
+## Screenshot
+
+![Home Page](assets/screenshot/home_page.png)
+
 ## Requirements
 
 - Windows 10 or later.
