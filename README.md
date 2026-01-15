@@ -1,4 +1,6 @@
-# Port Sentinel (端口哨兵)
+# Port Sentinel
+
+[English](README.md) | [中文](README_zh.md)
 
 Flutter Windows Desktop application for monitoring ports and managing processes.
 
@@ -31,10 +33,10 @@ Flutter Windows Desktop application for monitoring ports and managing processes.
    flutter run -d windows
    ```
 
-## License
-
-[MIT](LICENSE)
-
 ## Note on Permissions
 
 If you encounter "Access Denied" when trying to kill a process, please run the application as Administrator.
+
+## License
+
+[MIT](LICENSE)
