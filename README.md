@@ -1,16 +1,32 @@
-# port_sentinel
+# Port Sentinel (端口哨兵)
 
-端口哨兵，用于在开发过程中快速排查端口占用，并支持一键杀进程。
+Flutter Windows Desktop application for monitoring ports and managing processes.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- **Monitor Ports**: View all TCP/UDP ports currently in use.
+- **Process Info**: See which process (PID and Name) is using a port.
+- **Search & Filter**:
+  - Search by Port, PID, or Process Name.
+  - Filter by Protocol (TCP/UDP).
+- **Kill Process**: Terminate conflicting processes directly from the app.
+  - Includes safety confirmation dialog.
+- **Auto Refresh**: Optional automatic data update.
 
-A few resources to get you started if this is your first Flutter project:
+## Requirements
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Windows 10 or later.
+- Administrator privileges recommended (for killing system processes or seeing all details).
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Development
+
+1. **Install Flutter**: Ensure Flutter SDK is installed and configured.
+2. **Run**:
+   ```bash
+   flutter pub get
+   flutter run -d windows
+   ```
+
+## Note on Permissions
+
+If you encounter "Access Denied" when trying to kill a process, please run the application as Administrator.
