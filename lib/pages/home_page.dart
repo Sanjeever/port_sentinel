@@ -15,23 +15,7 @@ class HomePage extends StatelessWidget {
         title: const Text('Port Sentinel'),
         actions: [
           Consumer<HomeProvider>(
-            builder: (context, provider, _) {
-              return Row(
-                children: [
-                  const Text('Auto Refresh'),
-                  Switch(
-                    value: provider.isAutoRefresh,
-                    onChanged: (val) => provider.toggleAutoRefresh(val),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: provider.isLoading ? null : () => provider.refresh(),
-                  ),
-                  const SizedBox(width: 16),
-                ],
-              );
-            },
+            builder: (context, provider, _) => _buildRefreshArea(context, provider),
           ),
         ],
       ),
@@ -44,6 +28,56 @@ class HomePage extends StatelessWidget {
             child: _buildList(context),
           ),
           _buildStatusBar(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRefreshArea(BuildContext context, HomeProvider provider) {
+    String lastRefreshText = 'Last refresh: --:--:--';
+    if (provider.lastRefreshTime != null) {
+      final dt = provider.lastRefreshTime!;
+      final h = dt.hour.toString().padLeft(2, '0');
+      final m = dt.minute.toString().padLeft(2, '0');
+      final s = dt.second.toString().padLeft(2, '0');
+      lastRefreshText = 'Last refresh: $h:$m:$s';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 16.0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Auto Refresh', style: TextStyle(fontSize: 13)),
+                  const SizedBox(width: 4),
+                  Transform.scale(
+                    scale: 0.8,
+                    child: Switch(
+                      value: provider.isAutoRefresh,
+                      onChanged: (val) => provider.toggleAutoRefresh(val),
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                lastRefreshText,
+                style: const TextStyle(fontSize: 11),
+              ),
+            ],
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh Now',
+            onPressed: provider.isLoading ? null : () => provider.refresh(),
+          ),
         ],
       ),
     );

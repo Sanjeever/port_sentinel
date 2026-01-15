@@ -20,12 +20,14 @@ class HomeProvider with ChangeNotifier {
 
   Timer? _autoRefreshTimer;
   bool _isAutoRefresh = false;
+  DateTime? _lastRefreshTime;
 
   bool get isLoading => _isLoading;
   String get error => _error;
   String get searchText => _searchText;
   String get protocolFilter => _protocolFilter;
   bool get isAutoRefresh => _isAutoRefresh;
+  DateTime? get lastRefreshTime => _lastRefreshTime;
   int get sortColumnIndex => _sortColumnIndex;
   bool get sortAscending => _sortAscending;
 
@@ -95,6 +97,7 @@ class HomeProvider with ChangeNotifier {
       _allItems = await _repository.fetchPortProcessList();
       // Sort by port by default
       _allItems.sort((a, b) => a.port.compareTo(b.port));
+      _lastRefreshTime = DateTime.now();
     } catch (e) {
       _error = e.toString();
     } finally {
