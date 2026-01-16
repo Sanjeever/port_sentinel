@@ -15,6 +15,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final Set<String> _selectedKeys = {};
   DateTime? _lastRefreshTime;
+  String? _lastError;
 
   String _getItemKey(PortProcessItem item) => '${item.pid}-${item.port}-${item.protocol}';
 
@@ -58,6 +59,16 @@ class _HomePageState extends State<HomePage> {
       _lastRefreshTime = provider.lastRefreshTime;
     }
 
+    // Error feedback
+    if (provider.error.isNotEmpty && provider.error != _lastError) {
+      _lastError = provider.error;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        BotToast.showText(text: provider.error);
+      });
+    } else if (provider.error.isEmpty) {
+      _lastError = null;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Port Sentinel'),
@@ -68,6 +79,24 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           _buildFilterBar(context),
+          if (provider.error.isNotEmpty)
+            Container(
+              width: double.infinity,
+              color: Colors.red[50],
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, size: 20, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      provider.error,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           if (provider.isLoading)
             const LinearProgressIndicator(),
           if (_selectedKeys.isNotEmpty) _buildBatchActionBar(context),
@@ -315,11 +344,15 @@ class _HomePageState extends State<HomePage> {
     final isListening = item.state == 'LISTENING';
     final isSelected = _selectedKeys.contains(_getItemKey(item));
 
-    return Container(
-      height: 48.0, // Match itemExtent
-      color: isSelected ? Colors.blue.withOpacity(0.1) : (isEven ? Colors.white : Colors.grey[50]),
-      padding: const EdgeInsets.symmetric(vertical: 0), // Handled by alignment or height
-      child: Row(
+    return GestureDetector(
+      onSecondaryTapDown: (details) {
+        _showContextMenu(context, details.globalPosition, item);
+      },
+      child: Container(
+        height: 48.0, // Match itemExtent
+        color: isSelected ? Colors.blue.withOpacity(0.1) : (isEven ? Colors.white : Colors.grey[50]),
+        padding: const EdgeInsets.symmetric(vertical: 0), // Handled by alignment or height
+        child: Row(
         children: [
           SizedBox(
             width: 48,
@@ -370,7 +403,68 @@ class _HomePageState extends State<HomePage> {
           )),
         ],
       ),
+    ),
     );
+  }
+
+  void _showContextMenu(BuildContext context, Offset position, PortProcessItem item) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx,
+        position.dy,
+      ),
+      items: [
+        const PopupMenuItem(
+          value: 'copy_pid',
+          child: Row(
+            children: [
+              Icon(Icons.copy, size: 18),
+              SizedBox(width: 8),
+              Text('Copy PID'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'copy_port',
+          child: Row(
+            children: [
+              Icon(Icons.copy, size: 18),
+              SizedBox(width: 8),
+              Text('Copy Port'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'kill',
+          child: Row(
+            children: [
+              Icon(Icons.dangerous, color: Colors.red, size: 18),
+              SizedBox(width: 8),
+              Text('Kill Process', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (!mounted) return;
+      if (value == null) return;
+      switch (value) {
+        case 'copy_pid':
+          Clipboard.setData(ClipboardData(text: item.pid.toString()));
+          BotToast.showText(text: 'PID ${item.pid} copied');
+          break;
+        case 'copy_port':
+          Clipboard.setData(ClipboardData(text: item.port.toString()));
+          BotToast.showText(text: 'Port ${item.port} copied');
+          break;
+        case 'kill':
+          _showKillConfirmDialog(context, item);
+          break;
+      }
+    });
   }
 
   Widget _buildCopyableCell(String text, {FontWeight? fontWeight}) {
