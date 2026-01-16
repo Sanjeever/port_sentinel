@@ -4,6 +4,8 @@
 
 Flutter Windows Desktop application for monitoring ports and managing processes.
 
+Introduction Article: [Port Sentinel Release](https://sanjeev.top/en/posts/2026/01/15-port-sentinel-release)
+
 ## Features
 
 - **Monitor Ports**: View all TCP/UDP ports currently in use.

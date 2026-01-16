@@ -4,6 +4,8 @@
 
 [English](README.md) | [中文](README_zh.md)
 
+介绍文章：[Port Sentinel 发布](https://sanjeev.top/posts/2026/01/15-port-sentinel-release)
+
 ## 功能特性
 
 - **端口监控**：查看当前正在使用的所有 TCP/UDP 端口。
