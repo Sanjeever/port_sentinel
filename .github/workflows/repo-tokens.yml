@@ -29,7 +29,7 @@ jobs:
 
       - name: Update token count (README.md)
         id: tokens_en
-        uses: qwibitai/nanoclaw/repo-tokens@v1
+        uses: qwibitai/nanoclaw/repo-tokens@main
         with:
           include: "lib/**/*.dart test/**/*.dart pubspec.yaml"
           exclude: "lib/**/*.g.dart lib/**/*.freezed.dart"
@@ -38,7 +38,7 @@ jobs:
 
       - name: Update token count (README_zh.md)
         id: tokens_zh
-        uses: qwibitai/nanoclaw/repo-tokens@v1
+        uses: qwibitai/nanoclaw/repo-tokens@main
         with:
           include: "lib/**/*.dart test/**/*.dart pubspec.yaml"
           exclude: "lib/**/*.g.dart lib/**/*.freezed.dart"
@@ -51,4 +51,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -m "docs: update token count to ${{ steps.tokens_en.outputs.badge }}"
+          git pull --rebase
           git push
