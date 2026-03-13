@@ -4,6 +4,9 @@
 
 [English](README.md) | [中文](README_zh.md)
 
+![Repo Tokens](.github/badges/tokens.svg)
+**Repo Tokens：** <!-- token-count --><!-- /token-count -->
+
 介绍文章：[Port Sentinel 发布](https://sanjeev.top/posts/2026/01/15-port-sentinel-release)
 
 > 🎉 本项目已收录于阮一峰的 [科技爱好者周刊（第 382 期）](https://github.com/ruanyf/weekly/blob/master/docs/issue-382.md?plain=1#L187)

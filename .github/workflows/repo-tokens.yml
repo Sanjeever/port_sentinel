@@ -1,0 +1,54 @@
+name: Update Repo Tokens
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "lib/**"
+      - "test/**"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - ".github/workflows/repo-tokens.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-tokens:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Update token count (README.md)
+        id: tokens_en
+        uses: qwibitai/nanoclaw/repo-tokens@v1
+        with:
+          include: "lib/**/*.dart test/**/*.dart pubspec.yaml"
+          exclude: "lib/**/*.g.dart lib/**/*.freezed.dart"
+          readme: "README.md"
+          badge-path: ".github/badges/tokens.svg"
+
+      - name: Update token count (README_zh.md)
+        id: tokens_zh
+        uses: qwibitai/nanoclaw/repo-tokens@v1
+        with:
+          include: "lib/**/*.dart test/**/*.dart pubspec.yaml"
+          exclude: "lib/**/*.g.dart lib/**/*.freezed.dart"
+          readme: "README_zh.md"
+
+      - name: Commit if changed
+        run: |
+          git add README.md README_zh.md .github/badges/tokens.svg
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs: update token count to ${{ steps.tokens_en.outputs.badge }}"
+          git push
