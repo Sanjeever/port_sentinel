@@ -5,7 +5,7 @@
 Flutter Windows Desktop application for monitoring ports and managing processes.
 
 ![Repo Tokens](.github/badges/tokens.svg)
-**Repo Tokens:** <!-- token-count --><!-- /token-count -->
+**Repo Tokens:** <!-- token-count --><a href="https://github.com/qwibitai/nanoclaw/tree/main/repo-tokens">8.4k tokens · 4% of context window</a><!-- /token-count -->
 
 Introduction Article: [Port Sentinel Release](https://sanjeev.top/en/posts/2026/01/15-port-sentinel-release)
 

@@ -5,7 +5,7 @@
 [English](README.md) | [中文](README_zh.md)
 
 ![Repo Tokens](.github/badges/tokens.svg)
-**Repo Tokens：** <!-- token-count --><!-- /token-count -->
+**Repo Tokens：** <!-- token-count --><a href="https://github.com/qwibitai/nanoclaw/tree/main/repo-tokens">8.4k tokens · 4% of context window</a><!-- /token-count -->
 
 介绍文章：[Port Sentinel 发布](https://sanjeev.top/posts/2026/01/15-port-sentinel-release)
 
