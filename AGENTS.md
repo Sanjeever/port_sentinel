@@ -1,12 +1,9 @@
 # AGENTS.md
 
 ## Project Overview
-- Project: **Port Sentinel (端口哨兵)**.
+- Project: **Port Sentinel**.
 - Type: Flutter Windows desktop app for inspecting port occupancy and killing conflicting processes.
 - Main objective: quickly diagnose port conflicts during development with a clear, responsive UI.
-- Primary references:
-  - `docs/prompt.md` (product goals and architecture intent)
-  - `docs/rules.md` (coding conventions)
 
 ## Platform And Scope
 - Target platform: Windows 10+ desktop (`flutter run -d windows`).
