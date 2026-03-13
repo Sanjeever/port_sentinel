@@ -51,7 +51,7 @@
 - Avoid mixing command execution/parsing directly into UI widgets.
 - For new features, prefer extending service + provider first, then bind to UI.
 
-## Coding Conventions (From `docs/rules.md`)
+## Coding Conventions
 - Hard requirements:
   - No compile/analyzer errors.
   - Use 2-space indentation.
