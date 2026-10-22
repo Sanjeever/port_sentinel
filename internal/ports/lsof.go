@@ -13,6 +13,7 @@ func parseLsof(data []byte) ([]Entry, error) {
 	var current Entry
 	var pid int32
 	var fd string
+	var family string
 	flush := func() error {
 		if current.Protocol != "TCP" && current.Protocol != "UDP" {
 			return nil
@@ -36,6 +37,14 @@ func parseLsof(data []byte) ([]Entry, error) {
 			return nil
 		}
 		current.Port = uint32(n)
+		if strings.HasPrefix(current.Local, "*:") {
+			if family == "IPv4" {
+				current.Local = "0.0.0.0:" + port
+			}
+			if family == "IPv6" {
+				current.Local = "[::]:" + port
+			}
+		}
 		current.Process.PID = pid
 		current.ID = fd
 		if current.Protocol == "UDP" {
@@ -66,7 +75,10 @@ func parseLsof(data []byte) ([]Entry, error) {
 				return nil, err
 			}
 			current = Entry{}
+			family = ""
 			fd = value
+		case 't':
+			family = value
 		case 'P':
 			current.Protocol = value
 		case 'n':

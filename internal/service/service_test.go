@@ -97,6 +97,11 @@ func TestAuthorizationCancellationAndOrdinaryScope(t *testing.T) {
 	if len(v.Entries) != 1 || v.Error == nil || v.Error.Code != "authorization_cancelled" {
 		t.Fatalf("%+v", v)
 	}
+	s.refresh(false, false)
+	settled(t, s)
+	if v = s.State(); v.Error == nil || v.Error.Code != "authorization_cancelled" || v.Stale {
+		t.Fatalf("automatic refresh hid cancellation: %+v", v)
+	}
 }
 func TestScanSerializationAndFailureRetainsData(t *testing.T) {
 	s := New(context.Background(), &settings.Store{Path: filepath.Join(t.TempDir(), "settings.json")}, nil)

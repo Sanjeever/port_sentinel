@@ -85,7 +85,13 @@ func TestOwnedWorker(t *testing.T) {
 		<-ch
 		os.Exit(0)
 	}
-	select {}
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			os.Exit(4)
+		}
+		conn.Close()
+	}
 }
 func startWorker(t *testing.T, ignore bool) (*exec.Cmd, []int, <-chan error) {
 	t.Helper()

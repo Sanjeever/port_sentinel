@@ -56,7 +56,11 @@ func (s *Store) Load() (Preferences, error) {
 		return p, nil
 	}
 	if err == nil {
-		err = json.Unmarshal(data, &p)
+		loaded := &p
+		err = json.Unmarshal(data, &loaded)
+		if err == nil && loaded == nil {
+			err = fmt.Errorf("invalid_settings: null")
+		}
 	}
 	if err == nil {
 		err = p.Validate()

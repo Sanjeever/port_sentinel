@@ -2,11 +2,13 @@ package privilege
 
 import (
 	"context"
+	"runtime"
 	"strings"
 	"syscall"
 	"unsafe"
 
 	"github.com/Sanjeever/port_sentinel/internal/ports"
+	"github.com/go-ole/go-ole"
 	"golang.org/x/sys/windows"
 )
 
@@ -29,6 +31,14 @@ type shellExecuteInfo struct {
 }
 
 func launch(ctx context.Context, exe string, args []string) error {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	if err := ole.CoInitializeEx(0, ole.COINIT_APARTMENTTHREADED|ole.COINIT_DISABLE_OLE1DDE); err != nil {
+		if e, ok := err.(*ole.OleError); !ok || e.Code() != 1 {
+			return ports.Failure("authorization_failed", err)
+		}
+	}
+	defer ole.CoUninitialize()
 	quoted := make([]string, len(args))
 	for n, a := range args {
 		quoted[n] = syscall.EscapeArg(a)

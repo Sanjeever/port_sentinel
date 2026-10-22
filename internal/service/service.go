@@ -78,13 +78,13 @@ func (s *Service) Start() {
 				due := time.Since(s.lastAttempt) >= time.Duration(v.Preferences.Interval)*time.Second
 				s.mu.Unlock()
 				if v.Preferences.AutoRefresh && due {
-					s.Refresh(false)
+					s.refresh(false, false)
 				}
 			}
 		}
 	}()
 }
-func (s *Service) begin(task string) (context.Context, bool) {
+func (s *Service) begin(task string, clearError bool) (context.Context, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.stopping || s.state.Task != "" {
@@ -93,7 +93,9 @@ func (s *Service) begin(task string) (context.Context, bool) {
 	ctx, cancel := context.WithTimeout(s.ctx, 2*time.Minute)
 	s.cancel = cancel
 	s.state.Task = task
-	s.state.Error = nil
+	if clearError {
+		s.state.Error = nil
+	}
 	s.lastAttempt = time.Now()
 	s.wg.Add(1)
 	return ctx, true
@@ -108,7 +110,10 @@ func (s *Service) finish() {
 	s.wg.Done()
 }
 func (s *Service) Refresh(authorized bool) bool {
-	ctx, ok := s.begin("scanning")
+	return s.refresh(authorized, true)
+}
+func (s *Service) refresh(authorized, clearError bool) bool {
+	ctx, ok := s.begin("scanning", clearError)
 	if !ok {
 		return false
 	}
@@ -124,6 +129,9 @@ func (s *Service) Refresh(authorized bool) bool {
 		} else {
 			snapshot, err = s.Scan(ctx, false)
 		}
+		if ctx.Err() != nil {
+			err = ctx.Err()
+		}
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		if err != nil {
@@ -136,6 +144,13 @@ func (s *Service) Refresh(authorized bool) bool {
 		now := time.Now()
 		s.state.LastSuccess = &now
 		s.state.Stale = false
+		if s.state.Error != nil {
+			switch s.state.Error.Code {
+			case "authorization_cancelled", "authorization_failed", "authorization_unavailable", "cancelled":
+			default:
+				s.state.Error = nil
+			}
+		}
 	}()
 	return true
 }
@@ -146,7 +161,7 @@ func fault(err error) *ports.Fault {
 	return ports.Failure(ports.Classify(err), err)
 }
 func (s *Service) Terminate(targets []ports.Identity, force bool) bool {
-	ctx, ok := s.begin("terminating")
+	ctx, ok := s.begin("terminating", true)
 	if !ok {
 		return false
 	}
@@ -162,7 +177,7 @@ func (s *Service) Terminate(targets []ports.Identity, force bool) bool {
 			s.state.Error = ports.Failure("identity_changed", nil)
 			s.mu.Unlock()
 			s.finish()
-			return false
+			return true
 		}
 	}
 	s.emit()
@@ -213,6 +228,20 @@ func (s *Service) Terminate(targets []ports.Identity, force bool) bool {
 func (s *Service) Save(p settings.Preferences) error {
 	s.saveMu.Lock()
 	defer s.saveMu.Unlock()
+	return s.save(p)
+}
+func (s *Service) SaveWindow(width, height int) error {
+	s.saveMu.Lock()
+	defer s.saveMu.Unlock()
+	p := s.State().Preferences
+	if width == p.Width && height == p.Height {
+		return nil
+	}
+	p.Width = width
+	p.Height = height
+	return s.save(p)
+}
+func (s *Service) save(p settings.Preferences) error {
 	if err := s.store.Save(p); err != nil {
 		s.mu.Lock()
 		s.state.SettingsError = ports.Failure("settings_save", err)

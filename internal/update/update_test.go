@@ -56,7 +56,7 @@ func TestCheckRelease(t *testing.T) {
 
 func TestCheckReleasePreservesNotes(t *testing.T) {
 	for _, test := range []struct{ name, notes string }{
-		{"markdown", "## 新增\n\n- 支持 **托盘额度**。\n\n[发布说明](https://github.com/Sanjeever/port_sentinel/releases)\n"},
+		{"markdown", "## 新增\n\n- 支持 **端口详情**。\n\n[发布说明](https://github.com/Sanjeever/port_sentinel/releases)\n"},
 		{"empty", ""},
 	} {
 		t.Run(test.name, func(t *testing.T) {

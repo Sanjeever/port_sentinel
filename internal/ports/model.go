@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"syscall"
 
@@ -48,6 +49,7 @@ type Identity struct {
 	Status     string `json:"status"`
 	PathStatus string `json:"pathStatus"`
 	Risk       bool   `json:"risk"`
+	Diagnostic string `json:"diagnostic"`
 }
 
 func (i Identity) Key() string { return fmt.Sprintf("%d:%d", i.PID, i.Created) }
@@ -88,6 +90,7 @@ func Inspect(ctx context.Context, pid int32) Identity {
 	}
 	if err != nil {
 		i.Status = Classify(err)
+		i.Diagnostic = err.Error()
 		i.PathStatus = i.Status
 		return i
 	}
@@ -103,18 +106,34 @@ func Inspect(ctx context.Context, pid int32) Identity {
 	i.Name, err = p.NameWithContext(ctx)
 	if err != nil {
 		i.Status = Classify(err)
+		i.Diagnostic = err.Error()
 	}
 	i.Path, err = p.ExeWithContext(ctx)
 	if err != nil {
 		i.PathStatus = Classify(err)
+		if i.Diagnostic == "" {
+			i.Diagnostic = err.Error()
+		} else {
+			i.Diagnostic += "\n" + err.Error()
+		}
 	}
 	i.Risk = i.Risk || criticalName(i.Name)
 	return i
 }
 func criticalName(name string) bool {
-	switch name {
-	case "launchd", "kernel_task", "systemd", "init", "System", "Registry", "smss.exe", "csrss.exe", "wininit.exe", "services.exe", "lsass.exe", "winlogon.exe":
-		return true
+	var names []string
+	switch runtime.GOOS {
+	case "windows":
+		names = []string{"System", "Registry", "smss.exe", "csrss.exe", "wininit.exe", "services.exe", "lsass.exe", "winlogon.exe"}
+	case "darwin":
+		names = []string{"launchd", "kernel_task", "WindowServer", "loginwindow"}
+	case "linux":
+		names = []string{"systemd", "init"}
+	}
+	for _, critical := range names {
+		if name == critical {
+			return true
+		}
 	}
 	return false
 }

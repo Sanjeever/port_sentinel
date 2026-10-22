@@ -8,7 +8,7 @@ import (
 )
 
 func connections(ctx context.Context) ([]Entry, error) {
-	cmd := exec.CommandContext(ctx, "/usr/sbin/lsof", "-nP", "-iTCP", "-iUDP", "-F0pfPnT")
+	cmd := exec.CommandContext(ctx, "/usr/sbin/lsof", "-nP", "-iTCP", "-iUDP", "-F0pftPnT")
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	output, err := cmd.Output()

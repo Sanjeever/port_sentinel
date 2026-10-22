@@ -24,7 +24,7 @@ func TestDefaultsAndPersistence(t *testing.T) {
 	}
 }
 func TestCorruptionIsVisibleAndNeverOverwritten(t *testing.T) {
-	for _, data := range []string{"{broken", `{"interval":3}`, `{"theme":"fake"}`} {
+	for _, data := range []string{"{broken", `{"interval":3}`, `{"theme":"fake"}`, `null`} {
 		t.Run(data, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "settings.json")
 			if err := os.WriteFile(path, []byte(data), 0600); err != nil {

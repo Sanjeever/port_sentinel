@@ -1,0 +1,6 @@
+allowBuilds:
+  esbuild: true
+  '@heroui/shared-utils': false
+overrides:
+  motion-dom: 12.23.23
+  motion-utils: 12.23.6
