@@ -1,0 +1,99 @@
+name: 发布桌面应用
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            platform: windows/amd64
+            name: windows_amd64
+          - os: macos-14
+            platform: darwin/universal
+            name: darwin_universal
+          - os: ubuntu-22.04
+            platform: linux/amd64
+            name: linux_amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: 检查标签与版本
+        shell: bash
+        run: node scripts/version.mjs check '${{ github.ref_name }}'
+      - name: 安装 Linux 原生依赖
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+      - name: 验证
+        shell: bash
+        run: sh scripts/check.sh
+      - run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+      - name: 构建正式版
+        shell: bash
+        env:
+          PORT_SENTINEL_RELEASE_BUILD: 'true'
+        run: sh scripts/desktop.sh build -clean -platform '${{ matrix.platform }}'
+      - name: macOS 签名与公证
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: bash scripts/sign-macos.sh
+      - name: 打包
+        shell: bash
+        run: |
+          mkdir release
+          version="${GITHUB_REF_NAME#v}"
+          name="port-sentinel_${version}_${{ matrix.name }}"
+          if [ "$RUNNER_OS" = Windows ]; then
+            powershell -NoProfile -Command "Compress-Archive -Path build/bin/port-sentinel.exe -DestinationPath release/$name.zip"
+          elif [ "$RUNNER_OS" = macOS ]; then
+            ditto -c -k --keepParent build/bin/port-sentinel.app "release/$name.zip"
+          else
+            tar -czf "release/$name.tar.gz" -C build/bin port-sentinel
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: release/*
+          if-no-files-found: error
+  publish:
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+      - name: 发布完整 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          test "$(find release -type f | wc -l)" -eq 3
+          version="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" release/* --verify-tag --draft --title "$GITHUB_REF_NAME" --notes-file "docs/releases/$version.md"
+          gh release edit "$GITHUB_REF_NAME" --draft=false --latest

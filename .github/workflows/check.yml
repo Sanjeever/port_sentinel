@@ -1,0 +1,45 @@
+name: 检查桌面应用
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            platform: windows/amd64
+          - os: macos-14
+            platform: darwin/universal
+          - os: ubuntu-22.04
+            platform: linux/amd64
+          - os: ubuntu-24.04
+            platform: linux/amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: 安装 Linux 原生依赖
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+      - name: 验证
+        shell: bash
+        run: sh scripts/check.sh
+      - run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+      - name: 原生构建
+        shell: bash
+        run: sh scripts/desktop.sh build -clean -platform '${{ matrix.platform }}'
