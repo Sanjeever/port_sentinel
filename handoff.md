@@ -25,6 +25,8 @@
 
 CI 首轮已确认 Ubuntu 22.04/24.04 原生测试与构建通过；Windows 检出 CRLF 导致格式检查失败，已添加 `.gitattributes` 固定 LF。macOS runner 改为 `macos-15`：GitHub [公告](https://github.blog/changelog/2026-10-01-github-actions-macos-14-runner-image-retirement/)说明 `macos-14` 将于 2026-11-02 退役并缩减容量，实际已遇到排队；产品最低系统与两种架构部署目标仍为 macOS 12.0。另用本任务创建的 256 个 TCP 与 256 个 IPv6 UDP 监听端口检查真实原生长列表，显示共 540 条连接；检查后全部清理。
 
+最终代码的 macOS 15 Universal、Windows amd64、Ubuntu 24.04 原生测试与构建已在[检查任务](https://github.com/Sanjeever/port_sentinel/actions/runs/39804043760)通过；该轮 Ubuntu 22.04 因 runner 默认 Azure 软件源下载依赖过慢而取消以读取日志，不能将取消视为通过。检查/发布统一使用 `--no-install-recommends` 安装必需构建库，未修改软件源。正式发布仍由标签工作流重新执行三平台测试、构建和打包，全部成功后才公开。
+
 ## 已核实的起点
 
 访谈日期：2026-10-22。下列信息是访谈时快照，执行前检查是否有后续变化，保护用户已有改动。
