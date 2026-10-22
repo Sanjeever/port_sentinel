@@ -50,7 +50,7 @@ sh scripts/desktop.sh build -clean
 sh scripts/desktop.sh build -clean -platform darwin/universal
 ```
 
-Windows 在 Git Bash 中运行脚本。`check.sh` 先执行前端类型检查、测试和真实构建，再执行 Go 测试/vet 与版本检查。桌面脚本将 macOS CGO/链接目标设为 12.0，并使用外部链接解决 Go 1.23 在 macOS 26 上的兼容问题。Linux 检查和构建统一使用 `webkit2_41`。
+Windows 在 Git Bash 中运行脚本。`check.sh` 先执行前端类型检查、测试和真实构建，再执行 Go 测试/vet 与版本检查。桌面脚本将 macOS CGO/链接目标设为 12.0，并使用外部链接解决 Go 1.23 在 macOS 26 上的兼容问题。在 macOS 26 安装 Wails CLI 时，也在安装命令前添加 `GOFLAGS=-ldflags=-linkmode=external`。Linux 检查和构建统一使用 `webkit2_41`。
 
 Wails 在 dev/build 时生成 `frontend/wailsjs`，也可运行 `sh scripts/desktop.sh generate`。生成绑定和 `frontend/dist` 不提交，业务类型适配器位于 `frontend/src/api.ts`。直接运行 Go 检查前先构建真实前端。开发构建不检查或安装更新；测试开发构建时可将 `PORT_SENTINEL_CONFIG_DIR` 指向隔离目录，正式构建始终使用当前用户配置目录。
 

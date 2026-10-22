@@ -13,7 +13,10 @@ case "$(uname -s)" in
     export GOFLAGS="${GOFLAGS:-} -ldflags=-linkmode=external"
     ldflags="-linkmode=external $ldflags"
     ;;
-  Linux) set -- "$@" -tags webkit2_41 ;;
+  Linux)
+    export GOFLAGS="${GOFLAGS:-} -tags=webkit2_41"
+    set -- "$@" -tags webkit2_41
+    ;;
 esac
 if [ "$action" = generate ]; then exec wails generate module; fi
 exec wails "$action" -nosyncgomod "$@" -ldflags "$ldflags"

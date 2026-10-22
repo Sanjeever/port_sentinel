@@ -50,7 +50,7 @@ sh scripts/desktop.sh build -clean
 sh scripts/desktop.sh build -clean -platform darwin/universal
 ```
 
-Run shell scripts in Git Bash on Windows. `check.sh` runs frontend type checks, tests and a real frontend build before Go tests/vet, plus version checks. The desktop wrapper sets macOS CGO/linker targets to 12.0 and uses external linking for Go 1.23 on macOS 26. Linux checks/builds consistently use `webkit2_41`.
+Run shell scripts in Git Bash on Windows. `check.sh` runs frontend type checks, tests and a real frontend build before Go tests/vet, plus version checks. The desktop wrapper sets macOS CGO/linker targets to 12.0 and uses external linking for Go 1.23 on macOS 26. On macOS 26, also prefix the Wails CLI installation command with `GOFLAGS=-ldflags=-linkmode=external`. Linux checks/builds consistently use `webkit2_41`.
 
 Wails generates `frontend/wailsjs` during dev/build, or with `sh scripts/desktop.sh generate`; generated bindings and `frontend/dist` are not committed. The small typed adapter is in `frontend/src/api.ts`. Build the real frontend before running Go checks directly. Development builds do not check or install updates. Set `PORT_SENTINEL_CONFIG_DIR` to an isolated directory when testing a development build; release builds always use the user configuration directory.
 
