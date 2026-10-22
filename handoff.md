@@ -23,6 +23,8 @@
 
 长期开发约定见 `AGENTS.md`。本次不能声称已经验证的项目：真实成功认证和 UAC/polkit 行为、Windows/Linux 图形桌面交互、macOS 12 与 Intel 设备运行、Developer ID 签名/公证、已安装应用的升级与重启。CI 只能证明其实际运行的测试与构建。
 
+CI 首轮已确认 Ubuntu 22.04/24.04 原生测试与构建通过；Windows 检出 CRLF 导致格式检查失败，已添加 `.gitattributes` 固定 LF。macOS runner 改为 `macos-15`：GitHub [公告](https://github.blog/changelog/2026-10-01-github-actions-macos-14-runner-image-retirement/)说明 `macos-14` 将于 2026-11-02 退役并缩减容量，实际已遇到排队；产品最低系统与两种架构部署目标仍为 macOS 12.0。另用本任务创建的 256 个 TCP 与 256 个 IPv6 UDP 监听端口检查真实原生长列表，显示共 540 条连接；检查后全部清理。
+
 ## 已核实的起点
 
 访谈日期：2026-10-22。下列信息是访谈时快照，执行前检查是否有后续变化，保护用户已有改动。

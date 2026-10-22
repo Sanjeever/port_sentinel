@@ -13,7 +13,7 @@ jobs:
           - os: windows-2022
             platform: windows/amd64
             name: windows_amd64
-          - os: macos-14
+          - os: macos-15
             platform: darwin/universal
             name: darwin_universal
           - os: ubuntu-22.04
