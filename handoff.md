@@ -2,11 +2,26 @@
 
 ## 交接状态与任务目标
 
-本文件由需求访谈整理，用户已逐项确认。交接阶段只改写 `AGENTS.md` 并创建本文件，尚未实施技术迁移，也未改写 README。文中的新能力与文件结构是实现要求或建议，不表示已经存在。
+迁移实现已落地：Go + Wails v2、React/TypeScript/Vite、Tailwind 3.4、HeroUI 2 与 pnpm，已删除 Flutter 源码、runner、依赖、旧构建与 Repo Tokens 自动化。双语 README、真实 macOS 截图和 `docs/releases/2.0.0.md` 已同步。下文保留访谈决策与验收标准；“实现”与“已实测”必须分别判断。
 
-后续 Coding Agent 应先阅读 `AGENTS.md` 和本文件，再检查当前仓库与参考项目，在一次连续任务中完成 Go + Wails 迁移和重构，按工作单元做中文小提交。常规技术决定自行查证并实现，不重新询问已经确定的产品和 UI 决策。确实缺少必要授权、需求存在实质冲突或平台约束使要求无法完成时，说明具体阻塞，并继续不依赖它的工作。
+当前入口为 `sh scripts/desktop.sh dev`、`sh scripts/desktop.sh build -clean`、`sh scripts/check.sh`。macOS Universal 使用 `sh scripts/desktop.sh build -clean -platform darwin/universal`。脚本设置两种架构的 macOS 12.0 CGO/链接目标，处理 Go 1.23/macOS 26 的 `LC_UUID` 链接兼容问题，Linux 统一 `webkit2_41`。开发桌面检查用 `PORT_SENTINEL_CONFIG_DIR` 隔离设置；正式构建不接受该覆盖。
 
-目标是可独立开发、构建和使用的跨平台 Port Sentinel v2.0.0：完整迁移现有功能，补齐跨平台扫描与进程管理、按需提权、应用内更新、简体中文/英文和新版 UI，彻底移除 Flutter。不要只交付脚手架、静态界面、方案或平台 stub。
+执行期间用户追加授权推送、打标签与验证后公开发布；随后要求停止提权测试，此后未继续执行提权测试。成功管理员认证、UAC/polkit、实际安装升级仍需单独实测，不作为发布流程成功的推断。
+
+### 实现与验证快照（2026-10-22）
+
+| 验收范围 | 实现与证据 |
+| --- | --- |
+| 扫描与进程 | Windows IP Helper API 表；Linux `/proc` 与 pidfd；macOS NUL 字段协议 lsof。进程身份包含 PID 与创建时间。TCP/UDP、IPv4/IPv6、错误、去重与身份变化有测试。Windows 表解码与 Linux `/proc` 测试在对应平台执行。 |
+| 按需授权 | 同一可执行文件在 WebView 初始化前分流；UAC / macOS 系统管理员对话框 / polkit；一次性随机令牌与回环通道、父进程路径/创建时间复核、请求白名单、超时及取消。替身测试覆盖通道隔离、错误与取消；已观察 macOS 系统授权对话框，成功/取消结果的完整真实验收未完成。按用户要求停止进一步提权测试。 |
+| 服务与设置 | 扫描/结束串行；失败保留数据并标记过期；普通扫描不延续授权标签；自动刷新不抹掉授权取消反馈。原子保存、损坏配置保护、写入失败、窗口大小与快速连续设置变更均有测试。 |
+| 界面 | 端口表格、搜索/协议/范围、数值排序、筛选内全选、去重确认、正常/强制分开、详情、复制、逐项结果、双语和主题已连接 Go 服务。9 项前端测试通过。已用真实 Go 服务和自行创建的 TCP/UDP 进程完成正常退出、拒绝后独立强制确认、详情及路径复制；未操作用户真实进程。 |
+| 桌面 | 本机 macOS 26.6.2 arm64 原生构建与真实 `.app` 窗口通过，截图已入库；英文深色 700×600 布局与状态区检查通过。Universal 含 x86_64/arm64，两者 Mach-O 部署目标均为 12.0；临时签名校验通过。关闭窗口后进程退出，无本任务测试进程或辅助进程残留。Intel、macOS 12 设备行为未实测。 |
+| 更新 | 限本仓库正式 Release 与平台附件；启动 30 秒/之后 6 小时；用户确认下载安装、取消、归档路径校验、替换恢复、新窗口就绪确认。隔离目录与本地 HTTP 测试覆盖取消、日志、ZIP/tar、失败恢复、开发版限制；没有对正在使用的程序执行升级。 |
+| 自动检查 | 本机 `sh scripts/check.sh`、`go test -race -ldflags=-linkmode=external ./...`、`go vet ./...`、版本脚本测试/校验通过。Windows/Linux 内部包和测试已交叉编译；这不等于执行对应平台测试。原生 CI 结果在发布前补记。 |
+| 发布 | push/PR 检查 Windows、macOS Universal、Ubuntu 22.04/24.04；正式标签构建 Windows amd64、macOS Universal、Ubuntu 22.04 amd64，全部打包后汇总附件、创建草稿再公开。可选 macOS Developer ID/公证，部分凭据配置失败；未配置则明确分发无 Developer ID、公证的临时签名包。 |
+
+长期开发约定见 `AGENTS.md`。本次不能声称已经验证的项目：真实成功认证和 UAC/polkit 行为、Windows/Linux 图形桌面交互、macOS 12 与 Intel 设备运行、Developer ID 签名/公证、已安装应用的升级与重启。CI 只能证明其实际运行的测试与构建。
 
 ## 已核实的起点
 

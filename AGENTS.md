@@ -4,10 +4,18 @@ Port Sentinel 是用于定位端口冲突、查看端口占用和管理相关进
 
 ## 当前状态与事实来源
 
-- 本文件已切换为迁移后的开发约定，不表示迁移已经完成。迁移交接提交仍保留 Flutter 实现；首次执行迁移任务时，先阅读 [handoff.md](handoff.md)，按其中已经确认的范围连续完成。
+- 仓库已迁移为 Go + Wails v2，Flutter 运行链已移除。产品决策、迁移验收与实际验证范围见 [handoff.md](handoff.md)；构建通过不能替代真实系统授权与升级验收。
 - `handoff.md` 记录 v2.0.0 迁移决策、实施建议和验收要求；当前实现是否完成，以实际代码、配置和验证结果为准。完成迁移时更新交接状态，保留有效决策，不把设计目标写成已验证事实。
 - 用户已确认的需求优先于参考项目或第三方技能。涉及需求冲突或无法满足的关键约束时说明具体问题；常规实现选择自行处理，不重复询问已经确认的事项。
 - 工具和依赖版本以项目配置与锁文件为准，发布矩阵以工作流为准。修改行为后，同步会因此失真的文档、测试、注释和配置。
+
+## 开发入口
+
+- 安装依赖：`pnpm --dir frontend install --frozen-lockfile`；Wails CLI 与 `go.mod` 保持 v2.12.0 一致。
+- 开发：`sh scripts/desktop.sh dev`；原生构建：`sh scripts/desktop.sh build -clean`；macOS Universal 加 `-platform darwin/universal`。Windows 在 Git Bash 执行。
+- 完整检查：`sh scripts/check.sh`。脚本先构建真实前端，再运行 Go 检查；处理 macOS 12.0 CGO 目标、Go 1.23 在 macOS 26 上的外部链接，以及 Linux `webkit2_41` 标签。
+- `frontend/wailsjs` 由 Wails dev/build 或 `sh scripts/desktop.sh generate` 生成，不手改、不提交；前端业务适配器为 `frontend/src/api.ts`。
+- 开发构建的真实桌面检查使用 `PORT_SENTINEL_CONFIG_DIR` 隔离设置目录；正式构建忽略此变量。进程测试只能使用自行创建的监听进程。
 
 ## 技术栈与架构
 
