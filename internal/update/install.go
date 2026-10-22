@@ -112,7 +112,7 @@ func (m *Manager) Start(ctx context.Context, beforeExit func() error, quit func(
 	}
 	stage, err := os.MkdirTemp(filepath.Dir(target), ".port-sentinel-update-")
 	if err != nil {
-		return fmt.Errorf("安装目录不可写：%w", err)
+		return fmt.Errorf("%w: %w", ErrInstallDirectory, err)
 	}
 	started := false
 	defer func() {

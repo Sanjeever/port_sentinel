@@ -1,6 +1,8 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 export const en = {
+  install_directory_unwritable:
+    "Installation directory is not writable. Move the app to a writable location or download manually.",
   exitWithoutSaving: "Exit without saving window size",
   settings: "Settings",
   search: "Search port, PID or process",
@@ -31,14 +33,14 @@ export const en = {
   terminate: "End process",
   terminateMany: "End processes",
   force: "Force end",
-  confirmEnd: "End {{count}} process(es)?",
-  confirmForce: "Force end {{count}} process(es)?",
+  confirmEnd: "End {{count, number}} process(es)?",
+  confirmForce: "Force end {{count, number}} process(es)?",
   scopeWarning:
     "This affects every connection owned by these processes, including ports outside your selection.",
   forceWarning: "Unsaved work may be lost. This request cannot be undone.",
   criticalWarning:
     "Selection includes a system process. Ending it may interrupt the desktop or operating system.",
-  selected: "{{processes}} processes · {{ports}} selected rows",
+  selected: "{{processes, number}} processes · {{ports, number}} selected rows",
   clear: "Clear selection",
   empty: "No listening ports",
   emptyAll: "No connections",
@@ -50,7 +52,7 @@ export const en = {
   stale: "Previous data · refresh failed",
   lastRefresh: "Last refresh {{time}}",
   never: "Not refreshed",
-  count: "{{count}} connections",
+  count: "{{count, number}} connections",
   general: "General",
   about: "About",
   language: "Language",
@@ -59,7 +61,7 @@ export const en = {
   light: "Light",
   dark: "Dark",
   interval: "Refresh interval",
-  seconds: "{{count}} seconds",
+  seconds: "{{count, number}} seconds",
   autoUpdate: "Check for updates automatically",
   checkUpdate: "Check for updates",
   development: "Development build",
@@ -116,6 +118,8 @@ export const en = {
   newUpdate: "Settings, update available",
 };
 export const zh: Record<keyof typeof en, string> = {
+  install_directory_unwritable:
+    "安装目录不可写，请将应用移到可写位置或手动下载。",
   exitWithoutSaving: "退出且不保存窗口大小",
   settings: "设置",
   search: "搜索端口、PID 或进程名",
@@ -146,12 +150,12 @@ export const zh: Record<keyof typeof en, string> = {
   terminate: "结束进程",
   terminateMany: "结束进程",
   force: "强制结束",
-  confirmEnd: "结束 {{count}} 个进程？",
-  confirmForce: "强制结束 {{count}} 个进程？",
+  confirmEnd: "结束 {{count, number}} 个进程？",
+  confirmForce: "强制结束 {{count, number}} 个进程？",
   scopeWarning: "此操作会影响这些进程的全部连接，包括未选中的端口。",
   forceWarning: "未保存的工作可能丢失。此操作无法撤销。",
   criticalWarning: "已选目标包含系统进程，结束后可能中断桌面或操作系统。",
-  selected: "{{processes}} 个进程 · 已选 {{ports}} 条连接",
+  selected: "{{processes, number}} 个进程 · 已选 {{ports, number}} 条连接",
   clear: "取消选择",
   empty: "暂无监听端口",
   emptyAll: "暂无连接",
@@ -163,7 +167,7 @@ export const zh: Record<keyof typeof en, string> = {
   stale: "上次数据 · 刷新失败",
   lastRefresh: "上次刷新 {{time}}",
   never: "尚未刷新",
-  count: "{{count}} 条连接",
+  count: "{{count, number}} 条连接",
   general: "常规",
   about: "关于",
   language: "语言",
@@ -172,7 +176,7 @@ export const zh: Record<keyof typeof en, string> = {
   light: "浅色",
   dark: "深色",
   interval: "刷新间隔",
-  seconds: "{{count}} 秒",
+  seconds: "{{count, number}} 秒",
   autoUpdate: "自动检查更新",
   checkUpdate: "检查更新",
   development: "开发构建",

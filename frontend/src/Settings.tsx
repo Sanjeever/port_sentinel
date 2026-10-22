@@ -234,6 +234,20 @@ export function Settings({
               </>
             )}
             <div className="update-actions">
+              {u.error && (
+                <Button
+                  variant="light"
+                  onPress={() =>
+                    run(() =>
+                      backend().OpenURL(
+                        "https://github.com/Sanjeever/port_sentinel/releases",
+                      ),
+                    )
+                  }
+                >
+                  {t("manualDownload")}
+                </Button>
+              )}
               {u.phase ? (
                 <Button
                   variant="flat"

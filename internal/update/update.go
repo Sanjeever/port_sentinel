@@ -15,6 +15,8 @@ import (
 
 const Repository = "Sanjeever/port_sentinel"
 
+var ErrInstallDirectory = errors.New("install_directory_unwritable")
+
 type State struct {
 	Phase      string     `json:"phase"`
 	Error      string     `json:"error"`
@@ -81,6 +83,9 @@ func (m *Manager) fail(err error) {
 		s.Phase = ""
 		s.Error = err.Error()
 		s.ErrorCode = "update_failed"
+		if errors.Is(err, ErrInstallDirectory) {
+			s.ErrorCode = "install_directory_unwritable"
+		}
 		if errors.Is(err, context.Canceled) {
 			s.ErrorCode = "cancelled"
 		}

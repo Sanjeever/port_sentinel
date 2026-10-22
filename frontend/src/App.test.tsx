@@ -86,6 +86,43 @@ async function start() {
   await screen.findByPlaceholderText("Search port, PID or process");
 }
 describe("desktop workspace", () => {
+  it("offers manual download in the update confirmation after an install failure", async () => {
+    state = {
+      ...state,
+      build: { ...state.build, development: false },
+      update: {
+        ...state.update,
+        version: "2.1.0",
+        notes: "## English\n\n## 简体中文",
+        error: "permission denied",
+        errorCode: "install_directory_unwritable",
+      },
+    };
+    await start();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Settings, update available" }),
+    );
+    fireEvent.click(await screen.findByRole("tab", { name: "About" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Update available · 2.1.0" }),
+    );
+    const dialog = screen
+      .getAllByRole("dialog")
+      .find((el) => within(el).queryByText("Install 2.1.0?"))!;
+    expect(
+      within(dialog).getByText(
+        "Installation directory is not writable. Move the app to a writable location or download manually.",
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Open releases" }),
+    );
+    await waitFor(() =>
+      expect(bridge.OpenURL).toHaveBeenCalledWith(
+        "https://github.com/Sanjeever/port_sentinel/releases",
+      ),
+    );
+  });
   it("selects the filtered rows and confirms the deduplicated process before execution", async () => {
     await start();
     fireEvent.change(
