@@ -2,11 +2,11 @@
 
 ## 交接状态与任务目标
 
-迁移实现已落地：Go + Wails v2、React/TypeScript/Vite、Tailwind 3.4、HeroUI 2 与 pnpm，已删除 Flutter 源码、runner、依赖、旧构建与 Repo Tokens 自动化。双语 README、真实 macOS 截图和 `docs/releases/2.0.0.md` 已同步。下文保留访谈决策与验收标准；“实现”与“已实测”必须分别判断。
+迁移实现已完成并公开发布 [v2.0.0](https://github.com/Sanjeever/port_sentinel/releases/tag/v2.0.0)，标签指向 `ea5267e0ffee5b14008c9938859f219af5bf2d12`。技术栈为 Go + Wails v2、React/TypeScript/Vite、Tailwind 3.4、HeroUI 2 与 pnpm，已删除 Flutter 源码、runner、依赖、旧构建与 Repo Tokens 自动化。双语 README、真实 macOS 截图和 `docs/releases/2.0.0.md` 已同步。下文保留访谈决策与验收标准；“实现”与“已实测”必须分别判断。
 
 当前入口为 `sh scripts/desktop.sh dev`、`sh scripts/desktop.sh build -clean`、`sh scripts/check.sh`。macOS Universal 使用 `sh scripts/desktop.sh build -clean -platform darwin/universal`。脚本设置两种架构的 macOS 12.0 CGO/链接目标，处理 Go 1.23/macOS 26 的 `LC_UUID` 链接兼容问题，Linux 统一 `webkit2_41`。开发桌面检查用 `PORT_SENTINEL_CONFIG_DIR` 隔离设置；正式构建不接受该覆盖。
 
-执行期间用户追加授权推送、打标签与验证后公开发布；随后要求停止提权测试，此后未继续执行提权测试。成功管理员认证、UAC/polkit、实际安装升级仍需单独实测，不作为发布流程成功的推断。
+执行期间用户要求停止进一步提权测试，并追加授权推送、打标签和验证后公开发布；已按该边界执行。成功管理员认证、UAC/polkit、实际安装升级仍需单独实测，不作为发布流程成功的推断。
 
 ### 实现与验证快照（2026-10-22）
 
@@ -18,14 +18,16 @@
 | 界面 | 端口表格、搜索/协议/范围、数值排序、筛选内全选、去重确认、正常/强制分开、详情、复制、逐项结果、双语和主题已连接 Go 服务。10 项前端测试通过，包含更新目录不可写时的本地化错误及当前窗口的手动下载入口。已用真实 Go 服务和自行创建的 TCP/UDP 进程完成正常退出、拒绝后独立强制确认、详情及路径复制；未操作用户真实进程。 |
 | 桌面 | 本机 macOS 26.6.2 arm64 原生构建与真实 `.app` 窗口通过，截图已入库；英文深色 700×600 布局与状态区检查通过。Universal 含 x86_64/arm64，两者 Mach-O 部署目标均为 12.0；临时签名校验通过。关闭窗口后进程退出，无本任务测试进程或辅助进程残留。Intel、macOS 12 设备行为未实测。 |
 | 更新 | 限本仓库正式 Release 与平台附件；启动 30 秒/之后 6 小时；用户确认下载安装、取消、归档路径校验、替换恢复、新窗口就绪确认。隔离目录与本地 HTTP 测试覆盖取消、日志、ZIP/tar、失败恢复、开发版限制；没有对正在使用的程序执行升级。 |
-| 自动检查 | 本机 `sh scripts/check.sh`、`go test -race -ldflags=-linkmode=external ./...`、`go vet ./...`、版本脚本测试/校验通过。Windows/Linux 内部包和测试已交叉编译；这不等于执行对应平台测试。原生 CI 结果在发布前补记。 |
-| 发布 | push/PR 检查 Windows、macOS Universal、Ubuntu 22.04/24.04；正式标签构建 Windows amd64、macOS Universal、Ubuntu 22.04 amd64，全部打包后汇总附件、创建草稿再公开。可选 macOS Developer ID/公证，部分凭据配置失败；未配置则明确分发无 Developer ID、公证的临时签名包。 |
+| 自动检查 | 本机 `sh scripts/check.sh`、`go test -race -ldflags=-linkmode=external ./...`、`go vet ./...`、版本脚本测试/校验通过。最终标签代码的 Windows、macOS Universal、Ubuntu 22.04/24.04 原生测试、检查与构建已在[普通 CI](https://github.com/Sanjeever/port_sentinel/actions/runs/39805341021)全部通过；这不同于真实图形桌面、系统授权和升级验证。 |
+| 发布 | [正式发布 CI](https://github.com/Sanjeever/port_sentinel/actions/runs/39805342986)的 Windows amd64、macOS Universal、Ubuntu 22.04 amd64 测试、构建和打包全部通过，汇总三个附件后创建草稿并于 2026-10-22 23:52:41（北京时间）公开 Release。macOS 包为临时签名，未配置 Developer ID 与公证；Windows 未签名。 |
 
 长期开发约定见 `AGENTS.md`。本次不能声称已经验证的项目：真实成功认证和 UAC/polkit 行为、Windows/Linux 图形桌面交互、macOS 12 与 Intel 设备运行、Developer ID 签名/公证、已安装应用的升级与重启。CI 只能证明其实际运行的测试与构建。
 
 CI 首轮已确认 Ubuntu 22.04/24.04 原生测试与构建通过；Windows 检出 CRLF 导致格式检查失败，已添加 `.gitattributes` 固定 LF。macOS runner 改为 `macos-15`：GitHub [公告](https://github.blog/changelog/2026-10-01-github-actions-macos-14-runner-image-retirement/)说明 `macos-14` 将于 2026-11-02 退役并缩减容量，实际已遇到排队；产品最低系统与两种架构部署目标仍为 macOS 12.0。另用本任务创建的 256 个 TCP 与 256 个 IPv6 UDP 监听端口检查真实原生长列表，显示共 540 条连接；检查后全部清理。
 
-最终代码的 macOS 15 Universal、Windows amd64、Ubuntu 24.04 原生测试与构建已在[检查任务](https://github.com/Sanjeever/port_sentinel/actions/runs/39804043760)通过；该轮 Ubuntu 22.04 因 runner 默认 Azure 软件源下载依赖过慢而取消以读取日志，不能将取消视为通过。检查/发布统一使用 `--no-install-recommends` 安装必需构建库，未修改软件源。正式发布仍由标签工作流重新执行三平台测试、构建和打包，全部成功后才公开。
+早期一轮[检查任务](https://github.com/Sanjeever/port_sentinel/actions/runs/39804043760)因 Ubuntu 22.04 的 runner 默认 Azure 软件源下载依赖过慢而取消以读取日志，不能将取消视为通过。检查/发布统一使用 `--no-install-recommends` 安装必需构建库，未修改软件源。之后最终普通 CI 和正式发布 CI 均已通过，具体链接见表格。
+
+公开附件为 `port-sentinel_2.0.0_windows_amd64.zip`、`port-sentinel_2.0.0_darwin_universal.zip` 和 `port-sentinel_2.0.0_linux_amd64.tar.gz`。已下载检查归档结构：Windows 为 amd64 GUI 程序，macOS 为完整 `.app`、两种架构均以 12.0 为部署目标且临时签名校验通过，Linux 为可执行的 amd64 ELF 并使用 `webkit2_41`。Windows/Linux 程序的构建信息包含正式构建标记与上述标签提交号；Release 正文与仓库双语日志逐字一致。归档检查不代表实际安装升级已验证。
 
 ## 已核实的起点
 
