@@ -1,86 +1,84 @@
-# AGENTS.md
+# Port Sentinel 开发约定
 
-## Project Overview
-- Project: **Port Sentinel**.
-- Type: Flutter Windows desktop app for inspecting port occupancy and killing conflicting processes.
-- Main objective: quickly diagnose port conflicts during development with a clear, responsive UI.
+Port Sentinel 是用于定位端口冲突、查看端口占用和管理相关进程的桌面工具。目标技术栈为 Go + Wails v2，支持 Windows、Linux、macOS。
 
-## Platform And Scope
-- Target platform: Windows 10+ desktop (`flutter run -d windows`).
-- Core capability scope:
-  - Read TCP/UDP port occupancy, PID, process name, and (when possible) executable path.
-  - Search/filter/sort.
-  - Kill process by PID (with confirmation and clear error messages).
-- Permission caveat: non-admin mode may produce incomplete data or kill failures (`Access is denied`).
+## 当前状态与事实来源
 
-## Setup And Run
-- Install dependencies:
-  - `flutter pub get`
-- Run desktop app:
-  - `flutter run -d windows`
+- 本文件已切换为迁移后的开发约定，不表示迁移已经完成。迁移交接提交仍保留 Flutter 实现；首次执行迁移任务时，先阅读 [handoff.md](handoff.md)，按其中已经确认的范围连续完成。
+- `handoff.md` 记录 v2.0.0 迁移决策、实施建议和验收要求；当前实现是否完成，以实际代码、配置和验证结果为准。完成迁移时更新交接状态，保留有效决策，不把设计目标写成已验证事实。
+- 用户已确认的需求优先于参考项目或第三方技能。涉及需求冲突或无法满足的关键约束时说明具体问题；常规实现选择自行处理，不重复询问已经确认的事项。
+- 工具和依赖版本以项目配置与锁文件为准，发布矩阵以工作流为准。修改行为后，同步会因此失真的文档、测试、注释和配置。
 
-## Validation Commands
-- Format:
-  - `dart format .`
-- Static analysis:
-  - `flutter analyze`
-- Tests:
-  - `flutter test`
-- Before finishing changes, run at least `dart format .` and `flutter analyze`; run `flutter test` when logic is modified.
+## 技术栈与架构
 
-## Codebase Map
-- Entry:
-  - `lib/main.dart`
-- UI:
-  - `lib/pages/home_page.dart`
-- State management (Provider):
-  - `lib/providers/home_provider.dart`
-- Data/service layer:
-  - `lib/services/system_repository.dart`
-- Models:
-  - `lib/models/port_process_item.dart`
-- Tests:
-  - `test/system_repository_test.dart`
+- Go 负责端口扫描、进程信息、进程操作、系统授权、本地设置和程序更新。使用 Go Modules。
+- Wails v2 负责桌面生命周期和 Go/前端桥接；不在本次迁移中切换 Wails v3。
+- 前端使用 React、TypeScript、Vite、Tailwind CSS、HeroUI；Node 依赖统一使用 pnpm，并提交锁文件。
+- 参考项目为 `/Users/sanjeev/code/go/codex-deck`。复用其适用的构建、发布、更新和前端集成方式，不能引入账号、备份、代理管理、托盘、自启动等无关功能。
+- 本仓库必须独立安装、构建和运行；不得运行时依赖参考项目目录，也不得修改参考项目。
+- 保持清晰、简洁的边界：平台适配隔离 OS API 和命令；业务服务组织扫描与进程操作；Wails 桥接保持轻量；React 组件负责展示和交互。避免通用插件框架和无需求支撑的抽象。
+- 优先标准库、系统 API 和成熟第三方库。必须解析命令输出时，将解析逻辑隔离并测试；不能依赖 Windows 输出为英文，也不能手写 CSV、归档等成熟格式解析器。
+- 不修改 SDK 或第三方依赖源码。错误必须显式返回，不以假数据、吞错、静默降级或假成功掩盖未实现能力。
 
-## Architecture Guidelines
-- Keep clear layering:
-  - `models` for data structures.
-  - `services/repositories` for OS command/API integration and parsing.
-  - `providers` for UI-facing state transitions.
-  - `pages/widgets` for presentation only.
-- Avoid mixing command execution/parsing directly into UI widgets.
-- For new features, prefer extending service + provider first, then bind to UI.
+## 平台与功能边界
 
-## Coding Conventions
-- Hard requirements:
-  - No compile/analyzer errors.
-  - Use 2-space indentation.
-  - Do not use `new`.
-  - Keep imports ordered (`dart:` -> `package:` -> relative).
-  - Prefer explicit types (including generics); avoid broad `var`/`Object` where type is known.
-  - Use `final` for values not reassigned.
-  - Use lower_snake_case for file names; UpperCamelCase for classes; lowerCamelCase for variables.
-  - Bool naming should use positive semantics with `is`/`should` prefixes.
-- Strong recommendations:
-  - Avoid lines over 80 chars when practical.
-  - Use trailing commas in long widget trees/argument lists for readable formatting.
-  - Avoid magic numbers; extract constants/enums.
+- 首版支持 Windows 10/11 amd64、macOS 12+ Universal（Intel 与 Apple Silicon）、Ubuntu 22.04/24.04 amd64 桌面环境。其他 Linux 发行版说明依赖，不声称已全面兼容。
+- 保留端口扫描、TCP/UDP 筛选、搜索、排序、复制 PID/端口、单个和批量结束进程、自动刷新等现有能力。
+- 处理 IPv4/IPv6，显示本地/远端地址、连接状态、PID、进程名称及可读取的可执行文件路径。信息不可读、进程已退出、无关联 PID 与扫描失败必须区分。
+- 默认显示 TCP 监听端口和 UDP 绑定端口，提供“全部连接”切换。自动刷新默认开启，默认 5 秒，可选 2、5、10、30 秒；保存用户选择。
+- 扫描、结束进程和下载不得阻塞界面。控制重叠任务、过期结果和取消行为；退出时停止后台任务并清理按需辅助进程。
+- 关闭窗口即退出，不加入托盘、后台驻留或开机启动。
 
-## Parsing And Process Management Rules
-- Port/process retrieval should be robust across localized Windows outputs (Chinese/English).
-- Keep parser logic isolated and testable; add/update tests when parsing behavior changes.
-- Kill process flow must include:
-  - explicit user confirmation (PID, process name, port context),
-  - success/failure feedback,
-  - clear error text for permission failures.
+## 权限与结束进程
 
-## UX And Responsiveness
-- Long-running operations (scan/kill) must not block UI thread.
-- Expose loading/error states clearly in provider state.
-- Empty-result state should show a user-friendly message instead of blank content.
+- 主界面默认以普通权限运行。用户主动请求完整扫描，或已确认的进程操作权限不足时，通过系统授权启动独立辅助进程。
+- Windows 使用 UAC，macOS 使用系统管理员授权，Linux 使用 polkit。不安装常驻高权限服务，不自行收集或保存管理员密码，不让整个 WebView 以 root/管理员权限运行。
+- 授权限定于当前操作；一次批量操作按去重后的进程集合授权。自动刷新不得触发授权弹窗，不持久保存授权状态。
+- 用户取消授权后保留已有可见数据，明确显示取消、权限不足或系统授权组件缺失。受系统保护的进程可能仍无法操作，不绕过系统保护。
+- 辅助进程仅接受明确的扫描/结束进程请求，不暴露任意命令执行能力。校验参数、调用来源与结果通道，隔离每次请求并清理资源。
+- 单个和批量结束前必须确认 PID、进程名称、关联端口与作用范围。按 PID 去重，保留进程身份信息，并在执行前复核，避免扫描后 PID 被复用导致误杀。
+- 默认请求正常退出；目标不支持或未退出时明确反馈。强制结束必须由用户另行确认，不能超时后自动强制结束，也不能把强制结束伪装成正常退出。
+- 仅操作确认的目标进程，不默认递归结束进程树；拒绝危险的无效 PID、应用自身和辅助进程目标。批量结果逐进程报告成功、失败、已退出、待强制处理等状态。
+- 成功以实际退出状态为依据；发送退出请求成功不代表已退出。操作后刷新实际端口数据，不通过先删行伪造成功。
 
-## Safety And Change Discipline
-- Do not modify Flutter SDK source or third-party package source directly.
-- Keep changes minimal, scoped, and consistent with existing Provider-based architecture.
-- When behavior-affecting logic changes, add or update tests under `test/`.
-- Document non-obvious tradeoffs in code comments or PR description.
+## UI 与国际化
+
+- 设计、修改 UI 时使用 `refero-design-system` 技能，并读取其要求的最新参考。结合 codex-deck 的简洁工具风格和 HeroUI，不复制营销页面。
+- v2 首版主界面、详情侧栏和设置结构已在访谈中确认，见 `handoff.md`。后续按该方案实现并实际检查界面，无需再等待一次 UI 设计批准；重大范围变化才重新对齐。
+- 以端口表格为核心，通过间距、对齐和层级组织信息。不得添加装饰性卡片、营销文案、重复说明或无意义提示。
+- 支持浅色、深色、跟随系统三种主题，默认跟随系统。保留必要的可访问名称、键盘操作和焦点反馈，关键状态不能只靠颜色区分。
+- 支持 `zh-CN` 与 `en`。语言设置提供跟随系统、简体中文、English，默认跟随系统；中文系统使用简体中文，其他语言使用英文。切换立即生效并保存。
+- 所有用户可见文案集中管理，包括确认框、设置、空状态、批量结果、权限错误、更新状态和可访问名称。后端返回稳定错误标识及必要上下文，前端本地化摘要，保留原始系统错误供排查。
+- 日期、数字使用当前语言格式；进程名称、路径、地址及协议原值不翻译。英文界面和窄窗口必须验证布局。
+- 扫描失败保留上次成功数据并标记过期；部分可见与完整扫描不能混淆。空列表、筛选无结果、加载、授权取消和错误分别表达。
+
+## 设置、版本与更新
+
+- 设置保存在当前用户配置目录，不写应用安装目录。保存语言、主题、刷新设置、列表范围、协议筛选、排序和窗口大小；不跨启动保存搜索词、勾选项或授权状态。
+- 配置损坏和保存失败必须可见，不静默恢复成默认值覆盖原文件；测试使用临时目录。
+- Go + Wails 首版为 `2.0.0`，不覆盖既有 Flutter 标签、Release 或历史记录。
+- 迁移后应用版本以 `frontend/package.json` 为单一来源，版本脚本同步 `wails.json`；标签、内嵌版本、附件命名和版本日志必须一致。
+- 每次发布维护一份 `docs/releases/<version>.md`，包含英文和简体中文两部分。版本文件与日志放在同一提交，GitHub Release 与应用更新窗口复用该文件内容。
+- 沿用 codex-deck 的正式标签发布流程：各平台测试、构建、打包全部成功后，带齐附件并公开 Release。保持最小工作流权限。
+- 正式版默认启动 30 秒后检查更新，之后每 6 小时检查，可关闭自动检查或手动检查。发现更新只显示入口标记，用户确认后才下载、替换和重启；开发构建不自动检查或安装。
+- 更新仅接受本项目正式 Release 与匹配平台的附件。显示日志、进度和错误，下载可取消；下载失败不退出，替换或重启失败尝试恢复旧程序。
+- 安装目录不可写时明确报错并提供手动下载，不调用进程管理的提权流程更新程序。
+- macOS 签名和公证可选，凭据使用 GitHub Secrets；未配置时允许未签名包，但必须明确状态。Windows 首版也允许未签名。不得把构建成功视为签名、授权或升级验收通过。
+
+## 文档与提交
+
+- 日常沟通、AGENTS.md、handoff.md 和必要注释使用简体中文；代码标识符保持英文。主 README 使用英文，`README_zh.md` 使用简体中文，内容保持一致并互相链接。
+- 两份 README 都必须保留阮一峰《科技爱好者周刊（第 382 期）》收录及链接、既有介绍文章和 MIT 许可证入口。迁移后同步平台、开发、权限与更新说明。
+- 迁移时删除 Repo Tokens 工作流、徽章及计数文字；旧 Flutter 截图用新版真实截图替换，无法获取时移除过时截图，不使用伪造截图。
+- 当前任务已授权本地提交交接文档；后续迁移任务已授权按可验证工作单元做小提交，使用 Conventional Commits，描述用简体中文。不得夹带用户改动。
+- 没有额外授权，不推送、不打标签、不发布，不触碰既有公开标签或附件。
+
+## 验证与完成
+
+- 仅修改文档时，检查内容、路径、链接和最终 diff，不运行编译、测试或类型检查。
+- Go 变更按范围执行格式检查、`go test ./...`、`go vet ./...`；前端按范围执行 `pnpm --dir frontend typecheck`、`pnpm --dir frontend test`、`pnpm --dir frontend build`。脚本名称以实际配置为准，建立项目时必须提供对应入口。
+- Linux 采用 WebKitGTK 4.1 时，桌面相关 Go 检查及 Wails 构建一致使用 `webkit2_41` 标签。Go 根包嵌入前端产物时，先构建真实前端，不提交假占位产物。
+- 迁移交付必须有扫描/进程操作/授权/设置/更新的有意义测试、前端关键交互与双语测试，并完成本机原生构建和可执行的桌面检查。完整验收见 `handoff.md`。
+- 破坏性集成测试只能操作测试自行创建的进程与监听端口；更新测试使用隔离目录和本地 HTTP 服务，不能结束用户真实进程、覆盖真实配置或替换正在使用的程序。
+- 区分单元测试、替身、交叉编译、CI 原生构建与真实桌面验证。无法实际运行的平台或授权流程必须列明未验证项，不用跳过测试或 stub 冒充支持。
+- 交付前确认 Flutter 源码、依赖、生成文件及相关构建流程已移除，新仓库可独立开发与构建，文档和最终代码一致；说明结果、验证证据及环境限制。
