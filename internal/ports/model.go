@@ -91,6 +91,15 @@ func Inspect(ctx context.Context, pid int32) Identity {
 		i.PathStatus = i.Status
 		return i
 	}
+	if states, e := p.StatusWithContext(ctx); e == nil {
+		for _, state := range states {
+			if state == "zombie" {
+				i.Status = "exited"
+				i.PathStatus = "exited"
+				return i
+			}
+		}
+	}
 	i.Name, err = p.NameWithContext(ctx)
 	if err != nil {
 		i.Status = Classify(err)

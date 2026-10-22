@@ -22,18 +22,19 @@ type State struct {
 	Results       []ports.Result       `json:"results"`
 }
 type Service struct {
-	mu       sync.Mutex
-	state    State
-	ctx      context.Context
-	stop     context.CancelFunc
-	cancel   context.CancelFunc
-	wg       sync.WaitGroup
-	store    *settings.Store
-	Changed  func()
-	Scan     func(context.Context, bool) (ports.Snapshot, error)
-	Elevate  func(context.Context, privilege.Request) (privilege.Response, error)
-	Operator ports.Operator
-	stopping bool
+	mu          sync.Mutex
+	saveMu      sync.Mutex
+	state       State
+	ctx         context.Context
+	stop        context.CancelFunc
+	cancel      context.CancelFunc
+	wg          sync.WaitGroup
+	store       *settings.Store
+	Changed     func()
+	Scan        func(context.Context, bool) (ports.Snapshot, error)
+	Elevate     func(context.Context, privilege.Request) (privilege.Response, error)
+	Operator    ports.Operator
+	stopping    bool
 	lastAttempt time.Time
 }
 
@@ -54,6 +55,7 @@ func (s *Service) State() State {
 	v.Results = append([]ports.Result{}, v.Results...)
 	return v
 }
+func (s *Service) Context() context.Context { return s.ctx }
 func (s *Service) emit() {
 	if s.Changed != nil {
 		s.Changed()
@@ -72,7 +74,9 @@ func (s *Service) Start() {
 				return
 			case <-ticker.C:
 				v := s.State()
-				s.mu.Lock(); due:=time.Since(s.lastAttempt)>=time.Duration(v.Preferences.Interval)*time.Second; s.mu.Unlock()
+				s.mu.Lock()
+				due := time.Since(s.lastAttempt) >= time.Duration(v.Preferences.Interval)*time.Second
+				s.mu.Unlock()
 				if v.Preferences.AutoRefresh && due {
 					s.Refresh(false)
 				}
@@ -90,7 +94,7 @@ func (s *Service) begin(task string) (context.Context, bool) {
 	s.cancel = cancel
 	s.state.Task = task
 	s.state.Error = nil
-	s.lastAttempt=time.Now()
+	s.lastAttempt = time.Now()
 	s.wg.Add(1)
 	return ctx, true
 }
@@ -207,6 +211,8 @@ func (s *Service) Terminate(targets []ports.Identity, force bool) bool {
 	return true
 }
 func (s *Service) Save(p settings.Preferences) error {
+	s.saveMu.Lock()
+	defer s.saveMu.Unlock()
 	if err := s.store.Save(p); err != nil {
 		s.mu.Lock()
 		s.state.SettingsError = ports.Failure("settings_save", err)

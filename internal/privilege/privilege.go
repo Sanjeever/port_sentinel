@@ -134,6 +134,9 @@ func Serve(args []string) error {
 	if len(args) != 4 {
 		return fmt.Errorf("invalid helper arguments")
 	}
+	if !elevated() {
+		return ports.Failure("permission_denied", nil)
+	}
 	host, _, err := net.SplitHostPort(args[0])
 	if err != nil || host != "127.0.0.1" {
 		return fmt.Errorf("invalid helper endpoint")
