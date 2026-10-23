@@ -1,8 +1,6 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-From v2 onward, see the bilingual [per-version release notes](docs/releases/2.0.0.md). The entries below preserve the Flutter 1.x history.
+From v2 onward, changes are recorded in the bilingual [per-version release notes](docs/releases/). This file preserves the Flutter 1.x history.
 
 ## [v1.0.3] - 2026-01-16
 
