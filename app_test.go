@@ -20,7 +20,7 @@ func TestDevelopmentBuildCannotCheckOrInstallUpdates(t *testing.T) {
 		t.Fatal("development build allowed updates")
 	}
 	first, second := a.GetState(), a.GetState()
-	if second.Sequence <= first.Sequence || second.Build.Version != "2.0.0" {
+	if second.Sequence <= first.Sequence || second.Build.Version != currentBuild().Version {
 		t.Fatalf("invalid view: %+v", second)
 	}
 }

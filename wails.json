@@ -6,11 +6,13 @@
   "frontend:build": "pnpm build",
   "frontend:dev:watcher": "pnpm dev",
   "frontend:dev:serverUrl": "auto",
-  "postBuildHooks": {"darwin/*":"sh ../../scripts/darwin-icon.sh ${bin}"},
+  "postBuildHooks": {
+    "darwin/*": "sh ../../scripts/darwin-icon.sh ${bin}"
+  },
   "info": {
     "companyName": "Port Sentinel",
     "productName": "Port Sentinel",
-    "productVersion": "2.0.0",
+    "productVersion": "2.0.1",
     "copyright": "Copyright © 2026 Port Sentinel",
     "comments": "MIT License"
   }
