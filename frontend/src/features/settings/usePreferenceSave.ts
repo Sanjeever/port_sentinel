@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import type { Preferences } from "./types";
-import { backend } from "./api";
+import type { Preferences } from "../../desktop/types";
+import { backend } from "../../desktop/api";
 
 export function usePreferenceSave(
   preferences: Preferences | undefined,

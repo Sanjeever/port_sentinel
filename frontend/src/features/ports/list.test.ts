@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { visibleEntries, targets, retainSelection } from "./list";
-import { en, zh, systemLanguage } from "./i18n";
-import { row, preferences } from "./test-fixtures";
+import { en, zh, systemLanguage } from "../../i18n";
+import { row, preferences } from "../../test/fixtures";
 describe("connection list", () => {
   const entries = [
     row("a", 100, 2, "Node"),

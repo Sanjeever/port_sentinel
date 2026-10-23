@@ -7,9 +7,9 @@ import {
   ModalFooter,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
-import type { Entry, Identity } from "./types";
+import type { Entry, Identity } from "../../desktop/types";
 import { identityKey } from "./list";
-import { LocalizedClose } from "./LocalizedClose";
+import { LocalizedClose } from "../../components/LocalizedClose";
 export interface Confirmation {
   targets: Identity[];
   force: boolean;

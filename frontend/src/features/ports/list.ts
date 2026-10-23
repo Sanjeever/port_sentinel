@@ -1,4 +1,4 @@
-import type { Entry, Identity, Preferences } from "./types";
+import type { Entry, Identity, Preferences } from "../../desktop/types";
 export function identityKey(p: Identity) {
   return `${p.pid}:${p.created}`;
 }

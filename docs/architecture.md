@@ -65,8 +65,8 @@ Windows 正常退出依赖目标能接收窗口关闭请求，没有适用窗口
 | 扫描、系统适配、进程身份与退出 | `internal/ports/` | 同目录 `*_test.go`；含自行创建监听进程的生命周期测试 |
 | 系统授权与辅助进程边界 | `internal/privilege/` | 同目录测试；真实系统认证需桌面实测 |
 | 任务组织、取消与数据保留 | `internal/service/` | 同目录测试 |
-| 设置持久化与错误保护 | `internal/settings/`、`frontend/src/usePreferenceSave.ts` | 对应 Go 与前端测试 |
+| 设置持久化与错误保护 | `internal/settings/`、`frontend/src/features/settings/usePreferenceSave.ts` | 对应 Go 与前端测试 |
 | 更新来源、下载、替换与恢复 | `internal/update/`、`app.go` | 同目录测试、`app_test.go`；真实升级需桌面实测 |
-| 桌面生命周期与桥接数据 | `main.go`、`app.go`、`frontend/src/api.ts`、`frontend/src/types.ts`、`frontend/src/useDesktop.ts` | `app_test.go`、`frontend/src/App.test.tsx` |
-| 筛选、选择、确认与双语展示 | `frontend/src/`，文案入口 `i18n.ts` | `list.test.ts`、`App.test.tsx` 及相关交互测试 |
+| 桌面生命周期与桥接数据 | `main.go`、`app.go`、`frontend/src/desktop/` | `app_test.go`、`frontend/src/app/App.test.tsx` |
+| 筛选、选择、确认与双语展示 | `frontend/src/features/ports/`、`frontend/src/app/`，文案入口 `frontend/src/i18n.ts` | `frontend/src/features/ports/list.test.ts`、`frontend/src/app/App.test.tsx` 及相关交互测试 |
 | 版本、构建、打包与签名 | `version.go`、`scripts/`、`wails.json`、`.github/workflows/` | `scripts/version.test.mjs`、检查脚本和平台验证 |

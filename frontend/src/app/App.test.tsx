@@ -10,10 +10,10 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HeroUIProvider } from "@heroui/react";
 import App from "./App";
-import i18n from "./i18n";
-import type { View } from "./types";
-import { row, preferences } from "./test-fixtures";
-import type { Bridge } from "./api";
+import i18n from "../i18n";
+import type { View } from "../desktop/types";
+import { row, preferences } from "../test/fixtures";
+import type { Bridge } from "../desktop/api";
 let state: View;
 let bridge: Bridge;
 let receive: (v: View) => void;

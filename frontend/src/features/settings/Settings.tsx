@@ -11,10 +11,10 @@ import {
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
-import type { Preferences, View } from "./types";
-import { backend } from "./api";
-import { Feedback } from "./Feedback";
-import { LocalizedClose } from "./LocalizedClose";
+import type { Preferences, View } from "../../desktop/types";
+import { backend } from "../../desktop/api";
+import { Feedback } from "../../components/Feedback";
+import { LocalizedClose } from "../../components/LocalizedClose";
 
 export function Settings({
   view,

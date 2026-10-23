@@ -9,17 +9,22 @@ import {
   Network,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { backend } from "./api";
-import { useDesktop } from "./useDesktop";
-import { visibleEntries, retainSelection, targets, identityKey } from "./list";
-import i18n, { resolveLanguage } from "./i18n";
-import type { Entry, Preferences } from "./types";
-import { Feedback } from "./Feedback";
-import { PortTable } from "./PortTable";
-import { Details } from "./Details";
-import { ProcessDialog, type Confirmation } from "./ProcessDialog";
-import { Settings } from "./Settings";
-import { usePreferenceSave } from "./usePreferenceSave";
+import { backend } from "../desktop/api";
+import { useDesktop } from "../desktop/useDesktop";
+import {
+  visibleEntries,
+  retainSelection,
+  targets,
+  identityKey,
+} from "../features/ports/list";
+import i18n, { resolveLanguage } from "../i18n";
+import type { Entry, Preferences } from "../desktop/types";
+import { Feedback } from "../components/Feedback";
+import { PortTable } from "../features/ports/PortTable";
+import { Details } from "../features/ports/Details";
+import { ProcessDialog, type Confirmation } from "../features/ports/ProcessDialog";
+import { Settings } from "../features/settings/Settings";
+import { usePreferenceSave } from "../features/settings/usePreferenceSave";
 
 export default function App() {
   const { view, failure, run } = useDesktop();

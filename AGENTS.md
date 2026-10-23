@@ -33,7 +33,7 @@ Port Sentinel 用于定位端口冲突、查看连接和管理相关进程。工
 - 保持平台适配、业务服务、桌面桥接与展示层的职责清晰，沿用项目现有结构。优先标准库和成熟库，避免无需求支撑的框架、抽象或兼容分支。
 - Go 依赖使用 Go Modules，前端依赖统一使用 pnpm，依赖变更同步相应锁文件。
 - 系统输出解析应隔离并测试，不依赖本地化表头。不手写 CSV、归档等成熟格式解析器，不修改 SDK 或第三方依赖源码，不用假数据、吞错或假成功掩盖问题。
-- `frontend/wailsjs` 与 `frontend/dist` 为生成内容，不手改、不提交。桥接修改需核对 Go 导出类型、`frontend/src/api.ts`、`frontend/src/types.ts` 及相关测试。
+- `frontend/wailsjs` 与 `frontend/dist` 为生成内容，不手改、不提交。桥接修改需核对 Go 导出类型、`frontend/src/desktop/api.ts`、`frontend/src/desktop/types.ts` 及相关测试。
 - 历史参考项目为 `/Users/sanjeev/code/go/codex-deck`；需要时参考适用模式，不修改参考项目，不引入运行时或构建依赖。
 - 修改 UI 时使用 `refero-design-system` 技能并读取其要求的最新参考，结合现有 HeroUI 工具界面。保持表格为核心，不添加营销文案、装饰性卡片或重复说明；保留双语、键盘操作和可访问名称。
 

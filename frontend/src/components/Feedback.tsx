@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { Fault } from "./types";
+import type { Fault } from "../desktop/types";
 export function Feedback({ error }: { error: Fault | string | null }) {
   const { t, i18n } = useTranslation();
   if (!error) return null;

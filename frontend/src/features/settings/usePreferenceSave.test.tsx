@@ -1,8 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { usePreferenceSave } from "./usePreferenceSave";
-import { preferences } from "./test-fixtures";
-import type { Preferences } from "./types";
+import { preferences } from "../../test/fixtures";
+import type { Preferences } from "../../desktop/types";
 
 it("serializes rapid preference edits without reverting the previous choice", async () => {
   const writes: Preferences[] = [];

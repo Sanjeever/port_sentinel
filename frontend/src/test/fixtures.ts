@@ -1,4 +1,4 @@
-import type { Entry, Preferences } from "./types";
+import type { Entry, Preferences } from "../desktop/types";
 export const preferences: Preferences = {
   language: "en",
   theme: "system",

@@ -7,11 +7,11 @@ import {
 } from "@heroui/react";
 import { Copy } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { Entry } from "./types";
-import { backend } from "./api";
+import type { Entry } from "../../desktop/types";
+import { backend } from "../../desktop/api";
 import { identityKey } from "./list";
-import { LocalizedClose } from "./LocalizedClose";
-import { Feedback } from "./Feedback";
+import { LocalizedClose } from "../../components/LocalizedClose";
+import { Feedback } from "../../components/Feedback";
 export function Details({
   entry,
   entries,

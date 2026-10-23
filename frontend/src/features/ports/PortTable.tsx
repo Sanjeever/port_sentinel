@@ -8,8 +8,8 @@ import {
 import { ArrowDown, ArrowUp, MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import type { Entry, Preferences } from "./types";
-import { backend } from "./api";
+import type { Entry, Preferences } from "../../desktop/types";
+import { backend } from "../../desktop/api";
 
 export function PortTable({
   rows,
