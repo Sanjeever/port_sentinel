@@ -10,7 +10,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HeroUIProvider } from "@heroui/react";
 import App from "./App";
-import i18n from "../i18n";
+import i18n, { en, zh } from "../i18n";
 import type { View } from "../desktop/types";
 import { row, preferences } from "../test/fixtures";
 import type { Bridge } from "../desktop/api";
@@ -77,15 +77,152 @@ afterEach(() => {
   delete window.go;
   delete window.runtime;
 });
-async function start() {
+async function start(search = "Search port, PID or process") {
   render(
     <HeroUIProvider>
       <App />
     </HeroUIProvider>,
   );
-  await screen.findByPlaceholderText("Search port, PID or process");
+  await screen.findByPlaceholderText(search);
 }
 describe("desktop workspace", () => {
+  it.each([
+    { language: "en" as const, text: en },
+    { language: "zh-CN" as const, text: zh },
+  ])(
+    "keeps toolbar actions and busy states working in $language",
+    async ({ language, text }) => {
+      state.preferences.language = language;
+      await start(text.search);
+      const toolbar = screen.getByRole("region", { name: text.actions });
+      fireEvent.change(within(toolbar).getByLabelText(text.protocol), {
+        target: { value: "UDP" },
+      });
+      await waitFor(() =>
+        expect(screen.queryByText("8080")).not.toBeInTheDocument(),
+      );
+      expect(screen.getByText("5353")).toBeInTheDocument();
+      expect(bridge.SavePreferences).toHaveBeenCalledWith(
+        expect.objectContaining({ protocol: "UDP" }),
+      );
+      fireEvent.change(within(toolbar).getByPlaceholderText(text.search), {
+        target: { value: "Resolver" },
+      });
+      fireEvent.click(
+        within(toolbar).getByRole("button", { name: text.clear }),
+      );
+      expect(within(toolbar).getByPlaceholderText(text.search)).toHaveValue("");
+      fireEvent.click(
+        within(toolbar).getByRole("button", { name: text.refresh }),
+      );
+      await waitFor(() => expect(bridge.Refresh).toHaveBeenCalledWith(false));
+      fireEvent.click(
+        within(toolbar).getByRole("button", { name: text.authorize }),
+      );
+      await waitFor(() => expect(bridge.Refresh).toHaveBeenCalledWith(true));
+      await act(async () =>
+        receive({ ...state, task: "scanning", sequence: state.sequence + 1 }),
+      );
+      expect(
+        within(toolbar).getByRole("button", { name: text.refresh }),
+      ).toBeDisabled();
+      expect(
+        within(toolbar).getByRole("button", { name: text.authorize }),
+      ).toBeDisabled();
+    },
+  );
+  it("keeps dismissed results hidden until a different operation result arrives", async () => {
+    await start();
+    const result = {
+      target: state.entries[0].process,
+      status: "still_running",
+      detail: "",
+    };
+    await act(async () =>
+      receive({ ...state, results: [result], sequence: 2 }),
+    );
+    const panel = screen.getByRole("region", { name: "Process results" });
+    fireEvent.click(within(panel).getByRole("button", { name: "Close" }));
+    expect(
+      screen.queryByRole("region", { name: "Process results" }),
+    ).not.toBeInTheDocument();
+    await act(async () =>
+      receive({ ...state, results: [result], sequence: 3 }),
+    );
+    expect(
+      screen.queryByRole("region", { name: "Process results" }),
+    ).not.toBeInTheDocument();
+    await act(async () =>
+      receive({
+        ...state,
+        results: [{ ...result, status: "exited" }],
+        sequence: 4,
+      }),
+    );
+    const nextPanel = screen.getByRole("region", { name: "Process results" });
+    expect(within(nextPanel).getByText("Exited")).toBeInTheDocument();
+    expect(
+      within(nextPanel).queryByRole("button", { name: "Force end" }),
+    ).not.toBeInTheDocument();
+  });
+  it.each([
+    { language: "en" as const, text: en },
+    { language: "zh-CN" as const, text: zh },
+  ])(
+    "keeps update confirmation and download cancellation working in $language",
+    async ({ language, text }) => {
+      state.preferences.language = language;
+      state.build.development = false;
+      state.update.version = "2.1.0";
+      await start(text.search);
+      fireEvent.click(screen.getByRole("button", { name: text.newUpdate }));
+      fireEvent.click(await screen.findByRole("tab", { name: text.about }));
+      fireEvent.click(
+        screen.getByRole("button", { name: `${text.updateAvailable} · 2.1.0` }),
+      );
+      const dialog = await screen.findByRole("dialog", {
+        name: text.installConfirm.replace("{{version}}", "2.1.0"),
+      });
+      expect(bridge.InstallUpdate).not.toHaveBeenCalled();
+      fireEvent.click(
+        within(dialog).getByRole("button", { name: text.install }),
+      );
+      await waitFor(() => expect(bridge.InstallUpdate).toHaveBeenCalledOnce());
+      await act(async () =>
+        receive({
+          ...state,
+          update: {
+            ...state.update,
+            phase: "downloading",
+            downloaded: 512,
+            total: 1024,
+          },
+          sequence: 2,
+        }),
+      );
+      expect(within(dialog).getByRole("progressbar")).toHaveAttribute(
+        "value",
+        "512",
+      );
+      expect(
+        within(dialog).queryByRole("button", { name: text.close }),
+      ).not.toBeInTheDocument();
+      fireEvent.click(
+        within(dialog).getByRole("button", { name: text.cancel }),
+      );
+      await waitFor(() => expect(bridge.CancelUpdate).toHaveBeenCalledOnce());
+      await act(async () =>
+        receive({
+          ...state,
+          update: { ...state.update, phase: "installing" },
+          sequence: 3,
+        }),
+      );
+      expect(
+        within(dialog).getByRole("button", { name: text.installing }),
+      ).toBeDisabled();
+    },
+  );
   it("offers manual download in the update confirmation after an install failure", async () => {
     state = {
       ...state,

@@ -1,13 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Input, Switch } from "@heroui/react";
-import {
-  RefreshCw,
-  Search,
-  Settings as SettingsIcon,
-  ShieldCheck,
-  X,
-  Network,
-} from "lucide-react";
+import { Button } from "@heroui/react";
+import { Settings as SettingsIcon, Network } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { backend } from "../desktop/api";
 import { useDesktop } from "../desktop/useDesktop";
@@ -18,13 +11,18 @@ import {
   identityKey,
 } from "../features/ports/list";
 import i18n, { resolveLanguage } from "../i18n";
-import type { Entry, Preferences } from "../desktop/types";
+import type { Entry } from "../desktop/types";
 import { Feedback } from "../components/Feedback";
 import { PortTable } from "../features/ports/PortTable";
 import { Details } from "../features/ports/Details";
-import { ProcessDialog, type Confirmation } from "../features/ports/ProcessDialog";
+import {
+  ProcessDialog,
+  type Confirmation,
+} from "../features/ports/ProcessDialog";
 import { Settings } from "../features/settings/Settings";
 import { usePreferenceSave } from "../features/settings/usePreferenceSave";
+import { PortToolbar } from "../features/ports/PortToolbar";
+import { ProcessResults } from "../features/ports/ProcessResults";
 
 export default function App() {
   const { view, failure, run } = useDesktop();
@@ -113,88 +111,14 @@ export default function App() {
           {view.update.version && <span className="update-dot" />}
         </Button>
       </header>
-      <section className="toolbar" aria-label={t("actions")}>
-        <Input
-          aria-label={t("search")}
-          placeholder={t("search")}
-          startContent={<Search size={17} />}
-          value={query}
-          onValueChange={setQuery}
-          className="search-input"
-          size="sm"
-          variant="bordered"
-          endContent={
-            query ? (
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                aria-label={t("clear")}
-                onPress={() => setQuery("")}
-              >
-                <X size={14} />
-              </Button>
-            ) : null
-          }
-        />
-        <div className="toolbar-controls">
-          <div className="filters">
-            <select
-              aria-label={t("allConnections")}
-              value={view.preferences.scope}
-              onChange={(e) =>
-                save({ scope: e.target.value as Preferences["scope"] })
-              }
-            >
-              <option value="listening">{t("listening")}</option>
-              <option value="all">{t("allConnections")}</option>
-            </select>
-            <select
-              aria-label={t("protocol")}
-              value={view.preferences.protocol}
-              onChange={(e) =>
-                save({ protocol: e.target.value as Preferences["protocol"] })
-              }
-            >
-              <option value="ALL">{t("allProtocols")}</option>
-              <option value="TCP">TCP</option>
-              <option value="UDP">UDP</option>
-            </select>
-          </div>
-          <div className="refresh-controls">
-            <Switch
-              size="sm"
-              isSelected={view.preferences.autoRefresh}
-              onValueChange={(v) => save({ autoRefresh: v })}
-            >
-              {t("autoRefresh")}
-            </Switch>
-            <Button
-              size="sm"
-              variant="flat"
-              isDisabled={busy}
-              startContent={
-                <RefreshCw
-                  size={15}
-                  className={view.task === "scanning" ? "spinning" : ""}
-                />
-              }
-              onPress={() => run(() => backend().Refresh(false))}
-            >
-              {t("refresh")}
-            </Button>
-            <Button
-              size="sm"
-              variant="bordered"
-              isDisabled={busy}
-              startContent={<ShieldCheck size={15} />}
-              onPress={() => run(() => backend().Refresh(true))}
-            >
-              {t("authorize")}
-            </Button>
-          </div>
-        </div>
-      </section>
+      <PortToolbar
+        query={query}
+        setQuery={setQuery}
+        preferences={view.preferences}
+        task={view.task}
+        save={save}
+        refresh={(authorized) => run(() => backend().Refresh(authorized))}
+      />
       <Feedback error={view.error} />
       <Feedback error={view.settingsError} />
       {view.closeBlocked && (
@@ -271,52 +195,13 @@ export default function App() {
         </div>
       )}
       {view.results.length > 0 && showResults && (
-        <section className="results-panel" aria-label={t("results")}>
-          <div className="results-heading">
-            <h2>{t("results")}</h2>
-            <Button
-              isIconOnly
-              size="sm"
-              variant="light"
-              aria-label={t("close")}
-              onPress={() => setShowResults(false)}
-            >
-              <X size={15} />
-            </Button>
-          </div>
-          <ul>
-            {view.results.map((r) => (
-              <li key={identityKey(r.target)}>
-                <span>
-                  {r.target.name || t("unreadable")}{" "}
-                  <span className="mono">· {r.target.pid}</span>
-                </span>
-                <span
-                  className={r.status === "exited" ? "muted" : "danger-text"}
-                >
-                  {t(i18n.exists(r.status) ? r.status : "system_error")}
-                </span>
-                {r.detail && (
-                  <details>
-                    <summary>{t("errorDetails")}</summary>
-                    <pre>{r.detail}</pre>
-                  </details>
-                )}
-              </li>
-            ))}
-          </ul>
-          {canForce.length > 0 && (
-            <Button
-              size="sm"
-              color="danger"
-              variant="flat"
-              isDisabled={busy}
-              onPress={() => confirm([], true, canForce)}
-            >
-              {t("force")}
-            </Button>
-          )}
-        </section>
+        <ProcessResults
+          results={view.results}
+          canForce={canForce}
+          busy={busy}
+          onClose={() => setShowResults(false)}
+          onForce={() => confirm([], true, canForce)}
+        />
       )}
       <footer>
         <span>{t("count", { count: rows.length })}</span>
