@@ -10,6 +10,7 @@ build/bin/
 build/darwin/Info.dev.plist
 build/windows/*.syso
 build/windows/icon.ico
+build/windows/info.json
 *.test
 *.test.exe
 coverage/
