@@ -29,7 +29,7 @@
 | macOS 12+ Intel / Apple Silicon | `port-sentinel_2.0.0_darwin_universal.zip` | 系统 WebKit，安装完整 `.app` |
 | Ubuntu 22.04/24.04 amd64 桌面 | `port-sentinel_2.0.0_linux_amd64.tar.gz` | GTK 3、WebKitGTK 4.1；提权需要 polkit 与图形认证代理 |
 
-其他 Linux 发行版需要兼容的桌面依赖，尚未验证。macOS 两种架构均以 12.0 为构建目标。为兼顾旧版系统 WebView，前端采用 Tailwind 3.4 和 HeroUI 2；macOS 12 本身仍需设备实测。原生构建、桌面检查与授权/升级验证分别记录在 [handoff.md](handoff.md)。
+其他 Linux 发行版需要兼容的桌面依赖，尚未验证。macOS 两种架构均以 12.0 为构建目标。为兼顾旧版系统 WebView，前端采用 Tailwind 3.4 和 HeroUI 2。原生 CI 已覆盖 Windows、macOS Universal 和两个 Ubuntu 版本；Windows/Linux 图形桌面、macOS 12 与 Intel 设备运行、真实系统授权及已安装应用升级仍需人工验证。
 
 下载后将整个压缩包解压到可写位置再运行。未提供签名凭据时，macOS 包使用临时签名且未经公证，Windows 包未签名；请按系统要求批准下载的应用。Flutter 1.x 用户需要手动安装 v2。
 
@@ -68,7 +68,7 @@ Wails 在 dev/build 时生成 `frontend/wailsjs`，也可运行 `sh scripts/desk
 
 正式构建默认启动约 30 秒后检查本仓库正式 Release，之后每 6 小时检查一次，可在设置中关闭。发现新版本在设置入口显示标记，下载和重启需要确认，下载可取消。替换或启动失败时尝试恢复旧程序。安装目录必须可写；更新不会请求管理员权限。签名/公证包安装、真实系统授权和完整升级仍需平台实测，不能用单元测试替代。
 
-版本源为 `frontend/package.json`。先编写双语 `docs/releases/<version>.md`，再运行 `node scripts/version.mjs bump <version>`，将两个版本文件与日志一起提交。push/PR CI 检查 Windows、macOS Universal 和 Ubuntu 22.04/24.04。`v*` 标签触发三平台发布构建，所有安装包成功后公开 Release；正文与应用更新窗口复用同一份 Markdown。可选 macOS 签名凭据见 [handoff.md](handoff.md)，凭据部分配置会使发布失败。
+版本源为 `frontend/package.json`。先编写双语 `docs/releases/<version>.md`，再运行 `node scripts/version.mjs bump <version>`，将两个版本文件与日志一起提交。push/PR CI 检查 Windows、macOS Universal 和 Ubuntu 22.04/24.04。`v*` 标签触发三平台发布构建，所有安装包成功后公开 Release；正文与应用更新窗口复用同一份 Markdown。可选 macOS 签名凭据见 [scripts/sign-macos.sh](scripts/sign-macos.sh)，凭据部分配置会使发布失败。
 
 ## 许可证
 

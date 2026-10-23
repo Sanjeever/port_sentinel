@@ -29,7 +29,7 @@ The original release was featured in Ruan YiFeng's [Technology Enthusiasts Weekl
 | macOS 12+ Intel / Apple Silicon | `port-sentinel_2.0.0_darwin_universal.zip` | System WebKit; install the complete `.app` |
 | Ubuntu 22.04/24.04 amd64 desktop | `port-sentinel_2.0.0_linux_amd64.tar.gz` | GTK 3, WebKitGTK 4.1; polkit and a graphical authentication agent for privileged actions |
 
-Other Linux distributions require compatible desktop dependencies and have not been validated. The macOS build targets 12.0 for both architectures. Tailwind 3.4 and HeroUI 2 are used to accommodate older system WebViews; macOS 12 itself still requires device testing. Native build checks, desktop testing and authorization/update validation are recorded separately in [handoff.md](handoff.md).
+Other Linux distributions require compatible desktop dependencies and have not been validated. The macOS build targets 12.0 for both architectures. Tailwind 3.4 and HeroUI 2 are used to accommodate older system WebViews. Native CI covers Windows, macOS Universal and both Ubuntu versions; Windows/Linux desktop interaction, macOS 12 and Intel device behavior, real system authorization and installed-app upgrades still require manual validation.
 
 Packages are portable archives. Extract the whole package to a writable location before running. Without signing credentials, macOS builds are ad hoc signed and not notarized; Windows builds are unsigned. Follow your operating system's approval process for downloaded applications. Flutter 1.x users must install v2 manually.
 
@@ -68,7 +68,7 @@ Preferences are stored in `Port Sentinel/settings.json` under the current user's
 
 Release builds check this repository's stable GitHub Release about 30 seconds after startup, then every 6 hours, unless disabled. A new version marks Settings; downloading and restarting require confirmation. Downloads can be cancelled. Replacement or startup failure attempts to restore the old program. Installation needs a writable directory; updates never request administrator privileges. Signed/notarized installation, real authorization and end-to-end upgrades require platform testing in addition to unit tests.
 
-`frontend/package.json` is the version source. Write a bilingual `docs/releases/<version>.md`, then run `node scripts/version.mjs bump <version>` and commit both version files and notes together. Push/PR CI checks Windows, macOS Universal and Ubuntu 22.04/24.04. A `v*` tag runs the three release builds; the Release is made public after all packages succeed. Release notes are the same Markdown shown by the app. Optional macOS signing credentials are listed in [handoff.md](handoff.md); partial credential configuration fails the release job.
+`frontend/package.json` is the version source. Write a bilingual `docs/releases/<version>.md`, then run `node scripts/version.mjs bump <version>` and commit both version files and notes together. Push/PR CI checks Windows, macOS Universal and Ubuntu 22.04/24.04. A `v*` tag runs the three release builds; the Release is made public after all packages succeed. Release notes are the same Markdown shown by the app. Optional macOS signing credentials are listed in [scripts/sign-macos.sh](scripts/sign-macos.sh); partial credential configuration fails the release job.
 
 ## License
 
