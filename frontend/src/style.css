@@ -1,5 +1,5 @@
-/* Hallmark · v2.0.0 · genre: modern-minimal · shape: app screen · redesign: full · theme: Port Sentinel · signature: readable local endpoints */
-/* Critique: Keep the bound address visible alongside its process at the minimum window width. */
+/* Hallmark · v2.0.0 · genre: modern-minimal · shape: app screen · redesign: full · theme: Port Sentinel · signature: the inspected endpoint */
+/* Critique: Keep the endpoint visible alongside its process and distinguish inspection from selection. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,26 +12,27 @@
   --font-ui:
     -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --font-data: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  --ink: #202632;
-  --chrome: #f3f5f8;
+  --ink: #1d212b;
+  --chrome: #f7f8fa;
   --surface: #fff;
-  --surface-muted: #f7f8fb;
-  --muted: #535d70;
-  --line: #dce1e9;
-  --field: #7e899e;
-  --hover: #f1f4f9;
+  --surface-muted: #f4f5f8;
+  --muted: #565e6f;
+  --line: #e2e5eb;
+  --field: #838b9a;
+  --hover: #f4f5f8;
   --accent: #4056bf;
   --danger: #a92d41;
   --danger-surface: #fff0f2;
-  --selected: #e9edfb;
+  --selected: #eceffd;
   --heroui-primary: 230 50% 49%;
   --heroui-primary-foreground: 0 0% 100%;
   --heroui-danger: 350 61% 44%;
   --heroui-danger-foreground: 0 0% 100%;
   --heroui-focus: 230 50% 49%;
   --heroui-radius-medium: 6px;
-  --gutter: 20px;
-  --control-height: 36px;
+  --gutter: 16px;
+  --control-height: 34px;
+  --row-height: 38px;
   --radius-control: 6px;
   --radius-dialog: 12px;
   font-family: var(--font-ui);
@@ -41,18 +42,18 @@
   color-scheme: light;
 }
 :root[data-theme="dark"] {
-  --ink: #e8ebf2;
-  --chrome: #191c23;
-  --surface: #20242c;
-  --surface-muted: #252a34;
-  --muted: #aab3c4;
-  --line: #383f4d;
-  --field: #737f97;
-  --hover: #292f3b;
+  --ink: #e9ebf0;
+  --chrome: #191b20;
+  --surface: #202227;
+  --surface-muted: #25282e;
+  --muted: #aeb5c3;
+  --line: #353840;
+  --field: #737c8e;
+  --hover: #292c33;
   --accent: #adbbff;
   --danger: #ff9aa9;
   --danger-surface: #392530;
-  --selected: #303956;
+  --selected: #2c3450;
   --heroui-primary: 230 87% 83%;
   --heroui-primary-foreground: 228 34% 15%;
   --heroui-danger: 350 73% 77%;
@@ -96,6 +97,7 @@ p {
 }
 h1,
 h2 {
+  min-width: 0;
   text-wrap: balance;
   overflow-wrap: break-word;
 }
@@ -134,27 +136,25 @@ h3 {
   display: flex;
   flex-direction: column;
 }
-.app-header {
-  padding: 4px var(--gutter);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
 .brand {
   display: flex;
   gap: 8px;
   align-items: center;
 }
+.brand h1 {
+  font-size: 14px;
+  white-space: nowrap;
+}
 .brand svg {
+  flex: none;
   color: var(--accent);
 }
 .toolbar {
-  padding: 4px var(--gutter) 12px;
+  padding: 8px var(--gutter);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 8px 12px;
+  gap: 8px;
   flex-shrink: 0;
 }
 .search-input {
@@ -206,6 +206,15 @@ h3 {
   border: 1px solid var(--field);
   color: var(--ink);
   background: var(--surface);
+}
+.settings-trigger {
+  min-width: var(--control-height);
+  color: var(--muted);
+}
+.settings-trigger .update-dot {
+  position: absolute;
+  inset-block-start: 5px;
+  inset-inline-end: 5px;
 }
 .select-control {
   position: relative;
@@ -265,12 +274,12 @@ select {
 }
 .port-table thead th {
   color: var(--muted);
-  height: 36px;
+  height: 34px;
   font-size: 12px;
   white-space: nowrap;
 }
 .port-table tbody :is(th, td) {
-  height: 40px;
+  height: var(--row-height);
 }
 .port-table :is(th, td) {
   padding: 0 8px;
@@ -278,8 +287,8 @@ select {
   border-bottom: 1px solid var(--line);
 }
 .port-table .select-cell {
-  width: 48px;
-  padding: 0 4px 0 12px;
+  width: 40px;
+  padding: 0 4px 0 8px;
 }
 .row-check {
   display: grid;
@@ -298,13 +307,10 @@ select {
   cursor: not-allowed;
 }
 .port-table .column-port {
-  width: 76px;
+  width: 72px;
 }
 .port-table .column-name {
-  width: var(--name-width, clamp(130px, 16%, 290px));
-}
-.port-table[data-scope="listening"] .column-name {
-  width: var(--name-width, min(24%, 300px));
+  width: var(--name-width, 192px);
 }
 .port-table .column-pid {
   width: 72px;
@@ -330,7 +336,7 @@ select {
   display: var(--compact-state-display, none);
 }
 .port-table .action-cell {
-  width: 52px;
+  width: 48px;
   padding: 0 8px 0 4px;
 }
 .port-table .sortable-column {
@@ -347,7 +353,7 @@ select {
   display: flex;
   gap: 4px;
   align-items: center;
-  min-height: 36px;
+  min-height: 34px;
   width: 100%;
   padding: 0 8px;
   text-align: start;
@@ -387,7 +393,7 @@ select {
   align-items: center;
   gap: 4px;
   min-height: 32px;
-  max-width: 100%;
+  width: 100%;
   text-align: start;
 }
 .process-link span,
@@ -423,11 +429,12 @@ span.ellipsis {
 .port-table tbody tr[data-selected="true"] {
   background: var(--selected);
 }
-.port-table tbody tr[data-inspected="true"] {
-  background: var(--selected);
-}
 .port-table tbody tr[data-inspected="true"] .select-cell {
   box-shadow: inset 2px 0 var(--accent);
+}
+.process-link[aria-expanded="true"] {
+  color: var(--accent);
+  font-weight: 600;
 }
 .status-bar,
 .status-meta,
@@ -442,7 +449,7 @@ span.ellipsis {
   inset-block-end: 0;
   justify-content: space-between;
   gap: 4px 12px;
-  min-height: 40px;
+  min-height: 36px;
   flex-shrink: 0;
   border-top: 1px solid var(--line);
   padding: 4px var(--gutter);
@@ -452,6 +459,10 @@ span.ellipsis {
 }
 .status-meta {
   font-variant-numeric: tabular-nums;
+}
+.status-meta > :first-child {
+  color: var(--ink);
+  font-weight: 600;
 }
 .status-meta,
 .scan-controls {
@@ -982,14 +993,16 @@ pre {
   }
 }
 @media (max-width: 800px) {
-  :root {
-    --gutter: 16px;
-  }
   .toolbar {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .search-input {
+    grid-column: 2 / -1;
+  }
+  .filters {
+    grid-column: 1 / 3;
   }
   .refresh-controls {
-    grid-column: 1 / -1;
     justify-self: end;
   }
   .port-table .select-cell {
@@ -1003,10 +1016,13 @@ pre {
 }
 @media (max-width: 560px) {
   .toolbar {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
   }
+  .filters,
   .refresh-controls {
+    grid-column: 1 / -1;
     justify-self: start;
+    flex-wrap: wrap;
   }
   .port-table {
     min-width: 560px;

@@ -1,5 +1,12 @@
 import { Button, Input } from "@heroui/react";
-import { RefreshCw, Search, ShieldCheck, X } from "lucide-react";
+import {
+  Network,
+  RefreshCw,
+  Search,
+  Settings,
+  ShieldCheck,
+  X,
+} from "lucide-react";
 import { useEffect, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import type { Preferences } from "../../desktop/types";
@@ -13,6 +20,8 @@ export function PortToolbar({
   task,
   save,
   refresh,
+  openSettings,
+  hasUpdate,
 }: {
   query: string;
   setQuery: (value: string) => void;
@@ -21,6 +30,8 @@ export function PortToolbar({
   task: string;
   save: (change: Partial<Preferences>) => void;
   refresh: (authorized: boolean) => void;
+  openSettings: () => void;
+  hasUpdate: boolean;
 }) {
   const { t } = useTranslation();
   useEffect(() => {
@@ -44,8 +55,14 @@ export function PortToolbar({
     return () => document.removeEventListener("keydown", focusSearch);
   }, [search]);
 
+  const settingsLabel = t(hasUpdate ? "newUpdate" : "settings");
+
   return (
     <section className="toolbar" aria-label={t("actions")}>
+      <div className="brand">
+        <Network size={18} aria-hidden="true" />
+        <h1>Port Sentinel</h1>
+      </div>
       <Input
         ref={search}
         aria-label={t("search")}
@@ -130,6 +147,19 @@ export function PortToolbar({
           onPress={() => refresh(true)}
         >
           {t("authorize")}
+        </Button>
+        <Button
+          isIconOnly
+          variant="light"
+          size="sm"
+          className="tool-button settings-trigger"
+          disableRipple
+          aria-label={settingsLabel}
+          title={settingsLabel}
+          onPress={openSettings}
+        >
+          <Settings size={17} aria-hidden="true" />
+          {hasUpdate && <span className="update-dot" aria-hidden="true" />}
         </Button>
       </div>
     </section>

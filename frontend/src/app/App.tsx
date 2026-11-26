@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Switch } from "@heroui/react";
-import { Settings as SettingsIcon, Network } from "lucide-react";
+import { Network } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { backend } from "../desktop/api";
 import { useDesktop } from "../desktop/useDesktop";
@@ -158,24 +158,6 @@ export default function App() {
     .map((r) => r.target);
   return (
     <main className="workspace">
-      <header className="app-header">
-        <div className="brand">
-          <Network size={19} aria-hidden="true" />
-          <h1>Port Sentinel</h1>
-        </div>
-        <Button
-          variant="light"
-          size="sm"
-          className="tool-button"
-          disableRipple
-          startContent={<SettingsIcon size={16} aria-hidden="true" />}
-          aria-label={t(view.update.version ? "newUpdate" : "settings")}
-          onPress={() => setSettings(true)}
-        >
-          {t("settings")}
-          {view.update.version && <span className="update-dot" />}
-        </Button>
-      </header>
       <PortToolbar
         query={query}
         setQuery={setQuery}
@@ -184,6 +166,8 @@ export default function App() {
         task={view.task}
         save={save}
         refresh={(authorized) => run(() => backend().Refresh(authorized))}
+        openSettings={() => setSettings(true)}
+        hasUpdate={!!view.update.version}
       />
       <Feedback error={view.error} />
       <Feedback error={view.settingsError} />
