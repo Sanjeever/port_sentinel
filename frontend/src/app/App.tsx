@@ -32,7 +32,7 @@ export default function App() {
   const [detail, setDetail] = useState<Entry | null>(null);
   const [settings, setSettings] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
-  const [showResults, setShowResults] = useState(true);
+  const [dismissedResultRevision, setDismissedResultRevision] = useState(0);
   const p = view?.preferences;
   const save = usePreferenceSave(p, run);
   useEffect(() => {
@@ -57,9 +57,6 @@ export default function App() {
   useEffect(() => {
     if (view) setSelected((old) => retainSelection(old, view.entries));
   }, [view?.entries]);
-  useEffect(() => {
-    setShowResults(true);
-  }, [JSON.stringify(view?.results)]);
   const rows = useMemo(
     () => (view && p ? visibleEntries(view.entries, p, query) : []),
     [view?.entries, p, query],
@@ -194,15 +191,17 @@ export default function App() {
                   )}
         </div>
       )}
-      {view.results.length > 0 && showResults && (
-        <ProcessResults
-          results={view.results}
-          canForce={canForce}
-          busy={busy}
-          onClose={() => setShowResults(false)}
-          onForce={() => confirm([], true, canForce)}
-        />
-      )}
+      {view.results.length > 0 &&
+        view.resultRevision !== dismissedResultRevision && (
+          <ProcessResults
+            results={view.results}
+            endpoints={view.endpoints}
+            canForce={canForce}
+            busy={busy}
+            onClose={() => setDismissedResultRevision(view.resultRevision)}
+            onForce={() => confirm([], true, canForce)}
+          />
+        )}
       <footer>
         <span>{t("count", { count: rows.length })}</span>
         <span>

@@ -29,7 +29,9 @@ func TestBatchOnlyElevatesDeniedTargetsAndRescans(t *testing.T) {
 	s := New(context.Background(), &settings.Store{Path: filepath.Join(t.TempDir(), "settings.json")}, nil)
 	defer s.Stop()
 	a, b := ports.Identity{PID: 20, Created: 100}, ports.Identity{PID: 21, Created: 101}
-	s.state.Entries = []ports.Entry{{Process: a}, {Process: b}}
+	first := ports.Entry{Protocol: "TCP", Port: 8000, Local: "127.0.0.1:8000", State: "LISTEN", Process: a}
+	second := ports.Entry{Protocol: "UDP", Port: 8000, Local: "127.0.0.1:8000", State: "BOUND", Process: b}
+	s.state.Entries = []ports.Entry{first, second}
 	var exited atomic.Bool
 	s.Operator = ports.Operator{Self: 99, Wait: 100 * time.Millisecond, Inspect: func(_ context.Context, pid int32) ports.Identity {
 		if pid == 21 {
@@ -58,7 +60,7 @@ func TestBatchOnlyElevatesDeniedTargetsAndRescans(t *testing.T) {
 		return privilege.Response{Results: []ports.Result{{Target: a, Status: "protected"}}}, nil
 	}
 	s.Scan = func(context.Context, bool) (ports.Snapshot, error) {
-		return ports.Snapshot{Entries: []ports.Entry{{Port: 8000, Process: a}}, Visibility: "ordinary"}, nil
+		return ports.Snapshot{Entries: []ports.Entry{first}, Visibility: "ordinary"}, nil
 	}
 	if !s.Terminate([]ports.Identity{a, a, b}, false) || s.Refresh(false) {
 		t.Fatal("operation overlap")
@@ -67,6 +69,10 @@ func TestBatchOnlyElevatesDeniedTargetsAndRescans(t *testing.T) {
 	v := s.State()
 	if calls != 1 || len(v.Results) != 2 || v.Results[0].Status != "protected" || v.Results[1].Status != "exited" || len(v.Entries) != 1 || v.Entries[0].Port != 8000 {
 		t.Fatalf("%d %+v", calls, v)
+	}
+	if v.ResultRevision != 1 || len(v.Endpoints) != 2 || len(v.Endpoints[0].Bindings) != 1 ||
+		v.Endpoints[0].Bindings[0].Status != "binding_same_process" || v.Endpoints[1].Status != "binding_unseen" {
+		t.Fatalf("unexpected operation recheck: %+v", v.Endpoints)
 	}
 }
 func TestAuthorizationCancellationAndOrdinaryScope(t *testing.T) {

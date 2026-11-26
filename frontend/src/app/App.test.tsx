@@ -33,6 +33,8 @@ beforeEach(() => {
     settingsError: null,
     preferences: { ...preferences },
     results: [],
+    endpoints: [],
+    resultRevision: 0,
     build: { version: "2.0.0", commit: "abcdef", development: true },
     update: {
       phase: "",
@@ -166,7 +168,7 @@ describe("desktop workspace", () => {
       ).toBeDisabled();
     },
   );
-  it("keeps dismissed results hidden until a different operation result arrives", async () => {
+  it("keeps dismissed results hidden until another operation completes", async () => {
     await start();
     const result = {
       target: state.entries[0].process,
@@ -174,7 +176,7 @@ describe("desktop workspace", () => {
       detail: "",
     };
     await act(async () =>
-      receive({ ...state, results: [result], sequence: 2 }),
+      receive({ ...state, results: [result], resultRevision: 1, sequence: 2 }),
     );
     const panel = screen.getByRole("region", { name: "Process results" });
     fireEvent.click(within(panel).getByRole("button", { name: "Close" }));
@@ -182,7 +184,7 @@ describe("desktop workspace", () => {
       screen.queryByRole("region", { name: "Process results" }),
     ).not.toBeInTheDocument();
     await act(async () =>
-      receive({ ...state, results: [result], sequence: 3 }),
+      receive({ ...state, results: [result], resultRevision: 1, sequence: 3 }),
     );
     expect(
       screen.queryByRole("region", { name: "Process results" }),
@@ -190,16 +192,62 @@ describe("desktop workspace", () => {
     await act(async () =>
       receive({
         ...state,
-        results: [{ ...result, status: "exited" }],
+        results: [result],
+        resultRevision: 2,
         sequence: 4,
       }),
     );
     const nextPanel = screen.getByRole("region", { name: "Process results" });
-    expect(within(nextPanel).getByText("Exited")).toBeInTheDocument();
-    expect(
-      within(nextPanel).queryByRole("button", { name: "Force end" }),
-    ).not.toBeInTheDocument();
+    expect(within(nextPanel).getByText("Still running")).toBeInTheDocument();
   });
+  it.each([
+    { language: "en" as const, text: en },
+    { language: "zh-CN" as const, text: zh },
+  ])(
+    "shows the rechecked endpoint and its other owner in $language",
+    async ({ language, text }) => {
+      state.preferences.language = language;
+      const original = state.entries[0];
+      const replacement = row("replacement", 8080, 25, "Replacement");
+      await start(text.search);
+      await act(async () =>
+        receive({
+          ...state,
+          entries: [replacement],
+          results: [{ target: original.process, status: "exited", detail: "" }],
+          endpoints: [
+            {
+              protocol: original.protocol,
+              local: original.local,
+              status: "bindings_found",
+              bindings: [
+                {
+                  local: replacement.local,
+                  process: replacement.process,
+                  status: "binding_other_process",
+                },
+              ],
+            },
+            {
+              protocol: "UDP",
+              local: "[::]:5353",
+              status: "visibility_changed",
+              bindings: [],
+            },
+          ],
+          resultRevision: 1,
+          sequence: 2,
+        }),
+      );
+      const panel = within(screen.getByRole("region", { name: text.results }));
+      expect(panel.getByText(text.exited)).toBeVisible();
+      expect(panel.getByText(text.endpointRecheck)).toBeVisible();
+      expect(panel.getByText("TCP · 127.0.0.1:8080")).toBeVisible();
+      expect(panel.getByText(text.binding_other_process)).toBeVisible();
+      expect(panel.getByText("PID 25")).toBeVisible();
+      expect(panel.getByText(text.visibility_changed)).toBeVisible();
+    },
+  );
   it.each([
     { language: "en" as const, text: en },
     { language: "zh-CN" as const, text: zh },
@@ -364,6 +412,7 @@ describe("desktop workspace", () => {
             detail: "",
           },
         ],
+        resultRevision: 1,
         sequence: 2,
       }),
     );

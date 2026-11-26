@@ -31,19 +31,21 @@ type App struct {
 	closeWithoutSaving bool
 }
 type View struct {
-	Entries       []ports.Entry        `json:"entries"`
-	Visibility    string               `json:"visibility"`
-	LastSuccess   *time.Time           `json:"lastSuccess" ts_type:"string | null"`
-	Stale         bool                 `json:"stale"`
-	Task          string               `json:"task"`
-	Error         *ports.Fault         `json:"error"`
-	SettingsError *ports.Fault         `json:"settingsError"`
-	Preferences   settings.Preferences `json:"preferences"`
-	Results       []ports.Result       `json:"results"`
-	Build         BuildInfo            `json:"build"`
-	Update        update.State         `json:"update"`
-	Sequence      uint64               `json:"sequence"`
-	CloseBlocked  bool                 `json:"closeBlocked"`
+	Entries        []ports.Entry          `json:"entries"`
+	Visibility     string                 `json:"visibility"`
+	LastSuccess    *time.Time             `json:"lastSuccess" ts_type:"string | null"`
+	Stale          bool                   `json:"stale"`
+	Task           string                 `json:"task"`
+	Error          *ports.Fault           `json:"error"`
+	SettingsError  *ports.Fault           `json:"settingsError"`
+	Preferences    settings.Preferences   `json:"preferences"`
+	Results        []ports.Result         `json:"results"`
+	Endpoints      []ports.EndpointResult `json:"endpoints"`
+	ResultRevision uint64                 `json:"resultRevision"`
+	Build          BuildInfo              `json:"build"`
+	Update         update.State           `json:"update"`
+	Sequence       uint64                 `json:"sequence"`
+	CloseBlocked   bool                   `json:"closeBlocked"`
 }
 
 func NewApp() (*App, error) {
@@ -121,7 +123,7 @@ func (a *App) GetState() View {
 		u.ErrorCode = "update_failed"
 	}
 	s := a.service.State()
-	return View{Entries: s.Entries, Visibility: s.Visibility, LastSuccess: s.LastSuccess, Stale: s.Stale, Task: s.Task, Error: s.Error, SettingsError: s.SettingsError, Preferences: s.Preferences, Results: s.Results, Build: currentBuild(), Update: u, Sequence: a.sequence, CloseBlocked: a.closeBlocked}
+	return View{Entries: s.Entries, Visibility: s.Visibility, LastSuccess: s.LastSuccess, Stale: s.Stale, Task: s.Task, Error: s.Error, SettingsError: s.SettingsError, Preferences: s.Preferences, Results: s.Results, Endpoints: s.Endpoints, ResultRevision: s.ResultRevision, Build: currentBuild(), Update: u, Sequence: a.sequence, CloseBlocked: a.closeBlocked}
 }
 func (a *App) Refresh(authorized bool) bool { return a.service.Refresh(authorized) }
 func (a *App) CancelTask()                  { a.service.Cancel() }

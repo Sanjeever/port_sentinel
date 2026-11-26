@@ -1,5 +1,5 @@
 import type { Entry, Identity, Preferences } from "../../desktop/types";
-export function identityKey(p: Identity) {
+export function identityKey(p: Pick<Identity, "pid" | "created">) {
   return `${p.pid}:${p.created}`;
 }
 export function visibleEntries(

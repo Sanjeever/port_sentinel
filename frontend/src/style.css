@@ -514,18 +514,44 @@ pre {
 .results-heading h2 {
   font-size: 12px;
 }
-.results-panel li {
+.results-panel > ul > li {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
   padding: 5px 0;
   font-size: 12px;
 }
-.results-panel li > span:first-child {
+.results-panel > ul > li > span:first-child {
   min-width: 220px;
 }
 .results-panel details {
   width: 100%;
+}
+.endpoint-heading {
+  margin-top: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.endpoint-results {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.endpoint-results > div {
+  display: grid;
+  grid-template-columns: minmax(210px, 38%) minmax(0, 1fr);
+  gap: 6px 12px;
+  padding: 5px 0;
+}
+.endpoint-results li,
+.endpoint-owner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.endpoint-results li + li {
+  margin-top: 3px;
 }
 .update-dot {
   height: 6px;

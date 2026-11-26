@@ -11,15 +11,17 @@ import (
 )
 
 type State struct {
-	Entries       []ports.Entry        `json:"entries"`
-	Visibility    string               `json:"visibility"`
-	LastSuccess   *time.Time           `json:"lastSuccess"`
-	Stale         bool                 `json:"stale"`
-	Task          string               `json:"task"`
-	Error         *ports.Fault         `json:"error"`
-	SettingsError *ports.Fault         `json:"settingsError"`
-	Preferences   settings.Preferences `json:"preferences"`
-	Results       []ports.Result       `json:"results"`
+	Entries        []ports.Entry          `json:"entries"`
+	Visibility     string                 `json:"visibility"`
+	LastSuccess    *time.Time             `json:"lastSuccess"`
+	Stale          bool                   `json:"stale"`
+	Task           string                 `json:"task"`
+	Error          *ports.Fault           `json:"error"`
+	SettingsError  *ports.Fault           `json:"settingsError"`
+	Preferences    settings.Preferences   `json:"preferences"`
+	Results        []ports.Result         `json:"results"`
+	Endpoints      []ports.EndpointResult `json:"endpoints"`
+	ResultRevision uint64                 `json:"resultRevision"`
 }
 type Service struct {
 	mu          sync.Mutex
@@ -41,7 +43,7 @@ type Service struct {
 func New(ctx context.Context, store *settings.Store, changed func()) *Service {
 	ctx, stop := context.WithCancel(ctx)
 	p, err := store.Load()
-	s := &Service{ctx: ctx, stop: stop, store: store, Changed: changed, Scan: ports.Scan, Elevate: privilege.Run, Operator: ports.NewOperator(), state: State{Entries: []ports.Entry{}, Results: []ports.Result{}, Preferences: p}}
+	s := &Service{ctx: ctx, stop: stop, store: store, Changed: changed, Scan: ports.Scan, Elevate: privilege.Run, Operator: ports.NewOperator(), state: State{Entries: []ports.Entry{}, Results: []ports.Result{}, Endpoints: []ports.EndpointResult{}, Preferences: p}}
 	if err != nil {
 		s.state.SettingsError = ports.Failure("settings_load", err)
 	}
@@ -53,6 +55,7 @@ func (s *Service) State() State {
 	v := s.state
 	v.Entries = append([]ports.Entry{}, v.Entries...)
 	v.Results = append([]ports.Result{}, v.Results...)
+	v.Endpoints = append([]ports.EndpointResult{}, v.Endpoints...)
 	return v
 }
 func (s *Service) Context() context.Context { return s.ctx }
@@ -171,11 +174,12 @@ func (s *Service) Terminate(targets []ports.Identity, force bool) bool {
 		return false
 	}
 	s.mu.Lock()
+	before := ports.Snapshot{Entries: s.state.Entries, Visibility: s.state.Visibility}
+	s.mu.Unlock()
 	valid := map[string]bool{}
-	for _, e := range s.state.Entries {
+	for _, e := range before.Entries {
 		valid[e.Process.Key()] = true
 	}
-	s.mu.Unlock()
 	for _, t := range targets {
 		if !valid[t.Key()] {
 			s.mu.Lock()
@@ -214,9 +218,15 @@ func (s *Service) Terminate(targets []ports.Identity, force bool) bool {
 			}
 		}
 		snapshot, err := s.Scan(ctx, false)
+		if ctx.Err() != nil {
+			err = ctx.Err()
+		}
+		endpoints := ports.RecheckEndpoints(before, snapshot, targets, err)
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		s.state.Results = results
+		s.state.Endpoints = endpoints
+		s.state.ResultRevision++
 		if err != nil {
 			s.state.Error = fault(err)
 			s.state.Stale = s.state.LastSuccess != nil

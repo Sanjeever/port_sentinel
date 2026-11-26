@@ -46,6 +46,16 @@ export interface ProcessResult {
   status: string;
   detail: string;
 }
+export interface EndpointResult {
+  protocol: string;
+  local: string;
+  status: string;
+  bindings: {
+    local: string;
+    process: Pick<Identity, "pid" | "created" | "name">;
+    status: string;
+  }[];
+}
 export interface Update {
   phase: string;
   error: string;
@@ -68,6 +78,8 @@ export interface View {
   settingsError: Fault | null;
   preferences: Preferences;
   results: ProcessResult[];
+  endpoints: EndpointResult[];
+  resultRevision: number;
   build: { version: string; commit: string; development: boolean };
   update: Update;
   sequence: number;

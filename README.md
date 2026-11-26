@@ -12,7 +12,7 @@ The original release was featured in Ruan YiFeng's [Technology Enthusiasts Weekl
 
 - TCP/UDP and IPv4/IPv6, listening ports or all connections; local/remote addresses, state, PID, process name and readable executable paths.
 - Search by port, PID or process name; protocol filtering, numeric sorting, row menus and copying. Process details include the start time, working directory and current parent chain when available.
-- Select the filtered rows and end deduplicated processes after confirmation. Graceful exit and force termination are separate actions. The app checks process identity before acting and refreshes actual connections afterwards.
+- Select the filtered rows and end deduplicated processes after confirmation. Graceful exit and force termination are separate actions. The results show the process outcome and what the recheck found on its listening or bound endpoints.
 - Configurable automatic refresh.
 - English and Simplified Chinese; light, dark and system themes; saved local preferences and window size.
 - Official Release update checks, release notes, cancellable downloads and confirmed installation/restart. Closing the window exits the app.
