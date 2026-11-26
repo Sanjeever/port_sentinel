@@ -74,6 +74,10 @@ export default function App() {
     );
   const chosen = view.entries.filter((e) => selected.has(e.id));
   const selectedTargets = targets(chosen);
+  const visibleSelection = chosen.length
+    ? rows.filter((entry) => selected.has(entry.id)).map((entry) => entry.id)
+    : [];
+  const hiddenSelection = chosen.length - visibleSelection.length;
   const busy = !!view.task;
   const filtered = !!query.trim() || view.preferences.protocol !== "ALL";
   const empty = rows.length === 0 && (
@@ -136,7 +140,12 @@ export default function App() {
     processes = targets(entries),
   ) => {
     if (processes.length)
-      setConfirmation({ targets: processes, force, entries: view.entries });
+      setConfirmation({
+        targets: processes,
+        force,
+        entries: view.entries,
+        selectedIds: new Set(entries.map((entry) => entry.id)),
+      });
   };
   const canForce = view.results
     .filter(
@@ -197,28 +206,51 @@ export default function App() {
       )}
       {chosen.length > 0 && (
         <div className="batch-bar">
-          <span>
-            {t("selected", {
-              processes: selectedTargets.length,
-              ports: chosen.length,
-            })}
-          </span>
-          <Button
-            color="danger"
-            variant="flat"
-            size="sm"
-            isDisabled={busy || !selectedTargets.length}
-            onPress={() => confirm(chosen)}
-          >
-            {t("terminateMany")}
-          </Button>
-          <Button
-            variant="light"
-            size="sm"
-            onPress={() => setSelected(new Set())}
-          >
-            {t("clear")}
-          </Button>
+          <div className="batch-summary" role="status">
+            <strong>{t("selectedRows", { count: chosen.length })}</strong>
+            <span>{t("processCount", { count: selectedTargets.length })}</span>
+            {hiddenSelection > 0 && (
+              <span className="hidden-selection">
+                {t("hiddenSelection", { count: hiddenSelection })}
+              </span>
+            )}
+          </div>
+          <div className="batch-actions">
+            {hiddenSelection > 0 && (
+              <Button
+                variant="light"
+                size="sm"
+                disableRipple
+                onPress={() => {
+                  setSelected(new Set(visibleSelection));
+                  search.current?.focus();
+                }}
+              >
+                {t("clearHiddenSelection")}
+              </Button>
+            )}
+            <Button
+              variant="light"
+              size="sm"
+              disableRipple
+              onPress={() => {
+                setSelected(new Set());
+                search.current?.focus();
+              }}
+            >
+              {t("clear")}
+            </Button>
+            <Button
+              color="danger"
+              variant="flat"
+              size="sm"
+              disableRipple
+              isDisabled={busy || !selectedTargets.length}
+              onPress={() => confirm(chosen)}
+            >
+              {t(selectedTargets.length === 1 ? "terminate" : "terminateMany")}
+            </Button>
+          </div>
         </div>
       )}
       <div className="work-area" data-inspecting={!!detail}>
@@ -269,7 +301,10 @@ export default function App() {
             endpoints={view.endpoints}
             canForce={canForce}
             busy={busy}
-            onClose={() => setDismissedResultRevision(view.resultRevision)}
+            onClose={() => {
+              setDismissedResultRevision(view.resultRevision);
+              search.current?.focus();
+            }}
             onForce={() => confirm([], true, canForce)}
           />
         )}

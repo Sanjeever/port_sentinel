@@ -194,16 +194,16 @@ describe("desktop workspace", () => {
     await act(async () =>
       receive({ ...state, results: [result], resultRevision: 1, sequence: 2 }),
     );
-    const panel = screen.getByRole("region", { name: "Process results" });
+    const panel = screen.getByRole("region", { name: en.results });
     fireEvent.click(within(panel).getByRole("button", { name: "Close" }));
     expect(
-      screen.queryByRole("region", { name: "Process results" }),
+      screen.queryByRole("region", { name: en.results }),
     ).not.toBeInTheDocument();
     await act(async () =>
       receive({ ...state, results: [result], resultRevision: 1, sequence: 3 }),
     );
     expect(
-      screen.queryByRole("region", { name: "Process results" }),
+      screen.queryByRole("region", { name: en.results }),
     ).not.toBeInTheDocument();
     await act(async () =>
       receive({
@@ -213,7 +213,7 @@ describe("desktop workspace", () => {
         sequence: 4,
       }),
     );
-    const nextPanel = screen.getByRole("region", { name: "Process results" });
+    const nextPanel = screen.getByRole("region", { name: en.results });
     expect(within(nextPanel).getByText("Still running")).toBeInTheDocument();
   });
   it.each([
@@ -256,9 +256,12 @@ describe("desktop workspace", () => {
         }),
       );
       const panel = within(screen.getByRole("region", { name: text.results }));
+      expect(
+        panel.getByRole("heading", { name: text.processOutcome }),
+      ).toBeVisible();
       expect(panel.getByText(text.exited)).toBeVisible();
       expect(panel.getByText(text.endpointRecheck)).toBeVisible();
-      expect(panel.getByText("TCP · 127.0.0.1:8080")).toBeVisible();
+      expect(panel.getByText("127.0.0.1:8080")).toBeVisible();
       expect(panel.getByText(text.binding_other_process)).toBeVisible();
       expect(panel.getByText("PID 25")).toBeVisible();
       expect(panel.getByText(text.visibility_changed)).toBeVisible();
@@ -368,23 +371,53 @@ describe("desktop workspace", () => {
     fireEvent.click(
       screen.getByRole("checkbox", { name: "Select filtered rows" }),
     );
-    expect(
-      screen.getByText("1 processes · 2 selected rows"),
-    ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "End processes" }));
+    expect(screen.getByText("2 connections selected")).toBeInTheDocument();
+    expect(screen.getByText("1 process")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: en.terminate }));
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("PID 20")).toBeInTheDocument();
-    expect(within(dialog).getByText("8080, 9000")).toBeInTheDocument();
+    expect(within(dialog).getByText(en.affectedSelection)).toBeInTheDocument();
+    expect(within(dialog).getByText("127.0.0.1:8080")).toBeInTheDocument();
+    expect(within(dialog).getByText("127.0.0.1:9000")).toBeInTheDocument();
     expect(bridge.Terminate).not.toHaveBeenCalled();
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "End processes" }),
-    );
+    fireEvent.click(within(dialog).getByRole("button", { name: en.terminate }));
     await waitFor(() =>
       expect(bridge.Terminate).toHaveBeenCalledWith(
         [state.entries[0].process],
         false,
       ),
     );
+  });
+  it("shows hidden selections and keeps other affected connections in the confirmation", async () => {
+    await start();
+    const search = screen.getByLabelText(en.search);
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Select filtered rows" }),
+    );
+    fireEvent.change(search, { target: { value: "8080" } });
+    expect(screen.getByText("2 outside current filters")).toBeVisible();
+    fireEvent.click(
+      screen.getByRole("button", { name: en.clearHiddenSelection }),
+    );
+    expect(
+      screen.queryByText("2 outside current filters"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: "Select port 8080, PID 20" }),
+    ).toBeChecked();
+    expect(search).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: en.terminate }));
+    const dialog = await screen.findByRole("dialog", {
+      name: "End 1 process?",
+    });
+    expect(within(dialog).getByText(en.affectedSelection)).toBeVisible();
+    expect(within(dialog).getByText("127.0.0.1:8080")).toBeVisible();
+    expect(within(dialog).getByText(en.related)).toBeVisible();
+    expect(within(dialog).getByText("127.0.0.1:9000")).toBeVisible();
+    expect(
+      within(dialog).queryByText("127.0.0.1:5353"),
+    ).not.toBeInTheDocument();
+    expect(bridge.Terminate).not.toHaveBeenCalled();
   });
   it("switches language and theme immediately through persisted preferences", async () => {
     await start();
