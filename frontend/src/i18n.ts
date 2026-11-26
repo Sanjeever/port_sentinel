@@ -111,7 +111,11 @@ export const en = {
   manualDownload: "Open releases",
   results: "Operation results",
   processOutcome: "Processes",
+  processSummary: "{{exited, number}} of {{count, number}} exited",
   endpointRecheck: "Endpoint recheck",
+  endpointSummary:
+    "{{unseen, number}} of {{count, number}} without a matching binding",
+  recheckUnconfirmed: "{{count, number}} unconfirmed",
   binding_same_process: "Original process still holds this endpoint",
   binding_other_process: "Held by another process",
   binding_owner_unknown: "Binding found · owner identity unconfirmed",
@@ -266,7 +270,11 @@ export const zh: Record<keyof typeof en, string> = {
   manualDownload: "打开发行页面",
   results: "操作结果",
   processOutcome: "进程",
+  processSummary: "{{exited, number}} / {{count, number}} 个进程已退出",
   endpointRecheck: "端点复查",
+  endpointSummary:
+    "{{unseen, number}} / {{count, number}} 个端点未发现匹配绑定",
+  recheckUnconfirmed: "{{count, number}} 个端点无法确认",
   binding_same_process: "原进程仍占用",
   binding_other_process: "其他进程占用",
   binding_owner_unknown: "发现绑定 · 占用进程身份未确认",

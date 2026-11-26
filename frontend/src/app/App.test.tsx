@@ -293,6 +293,15 @@ describe("desktop workspace", () => {
       ).toBeVisible();
       expect(panel.getByText(text.exited)).toBeVisible();
       expect(panel.getByText(text.endpointRecheck)).toBeVisible();
+      expect(
+        panel.getByText(i18n.t("processSummary", { exited: 1, count: 1 })),
+      ).toBeVisible();
+      expect(
+        panel.getByText(i18n.t("endpointSummary", { unseen: 0, count: 2 })),
+      ).toBeVisible();
+      expect(
+        panel.getByText(i18n.t("recheckUnconfirmed", { count: 1 })),
+      ).toBeVisible();
       expect(panel.getByText("127.0.0.1:8080")).toBeVisible();
       expect(panel.getByText(text.binding_other_process)).toBeVisible();
       expect(panel.getByText("PID 25")).toBeVisible();
@@ -465,6 +474,10 @@ describe("desktop workspace", () => {
     expect(
       within(dialog).queryByText("127.0.0.1:5353"),
     ).not.toBeInTheDocument();
+    expect(within(dialog).getByText(en.scopeWarning)).toBeVisible();
+    expect(
+      within(dialog).getByRole("button", { name: en.cancel }),
+    ).toHaveFocus();
     expect(bridge.Terminate).not.toHaveBeenCalled();
   });
   it("switches language and theme immediately through persisted preferences", async () => {

@@ -1,5 +1,6 @@
 /* Hallmark · v2.0.0 · genre: modern-minimal · shape: app screen · redesign: full · theme: Port Sentinel · signature: the inspected endpoint */
 /* Critique: Keep the endpoint visible alongside its process and distinguish inspection from selection. */
+/* answered F18: HeroUI data-slot identifies a control, which uses the 34px toolbar height. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -480,16 +481,17 @@ span.ellipsis {
 }
 .batch-bar {
   padding: 4px var(--gutter);
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 4px 12px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: space-between;
+  align-items: start;
   flex-shrink: 0;
   background: var(--selected);
   border-top: 1px solid var(--line);
 }
 .batch-summary,
+.batch-counts,
+.batch-hidden,
 .batch-actions,
 .target-identity {
   display: flex;
@@ -498,6 +500,9 @@ span.ellipsis {
   gap: 4px 8px;
 }
 .batch-summary {
+  align-items: center;
+  gap: 4px 12px;
+  min-height: 26px;
   font-size: 12px;
   color: var(--muted);
 }
@@ -506,10 +511,11 @@ span.ellipsis {
 }
 .batch-actions {
   align-items: center;
-  margin-inline-start: auto;
 }
-.hidden-selection {
-  color: var(--danger);
+.batch-hidden {
+  align-items: center;
+  border-inline-start: 1px solid var(--field);
+  padding-inline-start: 12px;
 }
 .empty-state {
   display: grid;
@@ -557,12 +563,22 @@ pre {
   border: 1px solid var(--line);
   border-radius: var(--radius-dialog);
 }
+.dialog-close {
+  min-width: 32px;
+  min-height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-control);
+}
 .dialog [data-slot="body"] {
   padding: 12px 20px 16px;
 }
 .dialog-header {
   padding: 12px 48px 12px 20px;
   border-bottom: 1px solid var(--line);
+  border-start-start-radius: var(--radius-dialog);
+  border-start-end-radius: var(--radius-dialog);
+  background: var(--surface-muted);
 }
 .dialog-actions {
   padding: 8px 20px 12px;
@@ -571,12 +587,32 @@ pre {
 .dialog p {
   line-height: 1.6;
 }
-.target-list {
-  border-top: 1px solid var(--line);
+.process-dialog {
+  max-width: 456px;
 }
-.target-list > li {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
+.process-dialog .process-dialog-footer {
+  flex-direction: column;
+  gap: 8px;
+  border-end-start-radius: var(--radius-dialog);
+  border-end-end-radius: var(--radius-dialog);
+  color: var(--ink);
+  background: var(--surface-muted);
+}
+.process-dialog-warnings {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.process-dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.target-list > li + li {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
 }
 .target-identity {
   overflow-wrap: anywhere;
@@ -785,7 +821,6 @@ pre {
 .refresh-settings {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 .settings-fields > label,
 .refresh-settings > label,
@@ -794,7 +829,11 @@ pre {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: var(--control-height);
+  min-height: 44px;
+}
+.settings-fields > label + label,
+.refresh-settings > label {
+  border-top: 1px solid var(--line);
 }
 .setting-toggle {
   flex-direction: row-reverse;
@@ -808,8 +847,7 @@ pre {
   font-size: inherit;
 }
 .refresh-settings {
-  margin-top: 4px;
-  padding-top: 8px;
+  margin-top: 8px;
   border-top: 1px solid var(--line);
 }
 .settings-fields select {
@@ -823,7 +861,15 @@ pre {
   padding-top: 4px;
 }
 .settings-tabs {
+  width: 100%;
   padding-inline: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+.settings-tabs > [role="tab"] {
+  flex: none;
+  width: auto;
+  min-width: 64px;
 }
 .settings-tab-panel {
   padding: 4px 0 0;
@@ -890,9 +936,8 @@ pre {
   color: var(--ink);
 }
 .results-heading {
-  position: sticky;
-  inset-block-start: 0;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--gutter);
@@ -906,15 +951,27 @@ pre {
   min-height: 0;
   overflow: auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px 24px;
   padding: 8px var(--gutter) 12px;
+}
+.results-body[data-recheck="true"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .results-body:focus-visible {
   outline-offset: -2px;
 }
 .results-group {
   min-width: 0;
+}
+.results-summary {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 .results-group h3 {
   margin: 0;
@@ -1045,5 +1102,8 @@ pre {
   }
   .port-table {
     min-width: 560px;
+  }
+  .results-body[data-recheck="true"] {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -24,6 +24,15 @@ export function ProcessResults({
   onForce: () => void;
 }) {
   const { t, i18n } = useTranslation();
+  const exited = results.filter((result) => result.status === "exited").length;
+  const unseen = endpoints.filter(
+    (endpoint) => endpoint.status === "binding_unseen",
+  ).length;
+  const unconfirmed = endpoints.filter(
+    (endpoint) =>
+      endpoint.status === "visibility_changed" ||
+      endpoint.status === "recheck_failed",
+  ).length;
   return (
     <section className="results-panel" aria-labelledby="operation-results">
       <div className="results-heading">
@@ -41,12 +50,16 @@ export function ProcessResults({
       </div>
       <div
         className="results-body"
+        data-recheck={endpoints.length > 0}
         tabIndex={0}
         role="group"
         aria-labelledby="operation-results"
       >
         <div className="results-group">
-          <h3>{t("processOutcome")}</h3>
+          <header className="results-summary">
+            <h3>{t("processOutcome")}</h3>
+            <p>{t("processSummary", { exited, count: results.length })}</p>
+          </header>
           <ul className="process-outcomes" role="list">
             {results.map((r) => (
               <li key={identityKey(r.target)}>
@@ -83,7 +96,13 @@ export function ProcessResults({
         </div>
         {endpoints.length > 0 && (
           <div className="results-group">
-            <h3>{t("endpointRecheck")}</h3>
+            <header className="results-summary">
+              <h3>{t("endpointRecheck")}</h3>
+              <p>{t("endpointSummary", { unseen, count: endpoints.length })}</p>
+              {unconfirmed > 0 && (
+                <p>{t("recheckUnconfirmed", { count: unconfirmed })}</p>
+              )}
+            </header>
             <dl className="endpoint-results">
               {endpoints.map((endpoint) => (
                 <div key={`${endpoint.protocol}:${endpoint.local}`}>

@@ -6,6 +6,7 @@ import {
   ModalBody,
   ModalFooter,
 } from "@heroui/react";
+import { useEffect, useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { Entry, Identity } from "../../desktop/types";
 import { identityKey } from "./list";
@@ -62,6 +63,12 @@ export function ProcessDialog({
   onConfirm: () => void;
 }) {
   const { t } = useTranslation();
+  const cancel = useRef<HTMLButtonElement>(null);
+  const warningsId = useId();
+  const isOpen = !!value;
+  useEffect(() => {
+    if (isOpen) cancel.current?.focus({ preventScroll: true });
+  }, [isOpen]);
   const connectionsByProcess = new Map(
     value?.targets.map((target) => [identityKey(target), [] as Entry[]]),
   );
@@ -71,12 +78,12 @@ export function ProcessDialog({
   return (
     <Modal
       closeButton={<LocalizedClose />}
-      isOpen={!!value}
+      isOpen={isOpen}
       onClose={onClose}
       disableAnimation
       placement="center"
       scrollBehavior="inside"
-      classNames={{ base: "dialog", header: "dialog-header" }}
+      classNames={{ base: "dialog process-dialog", header: "dialog-header" }}
     >
       <ModalContent>
         {value && (
@@ -87,13 +94,6 @@ export function ProcessDialog({
               })}
             </ModalHeader>
             <ModalBody>
-              <p>{t("scopeWarning")}</p>
-              {value.force && (
-                <p className="danger-text">{t("forceWarning")}</p>
-              )}
-              {value.targets.some((p) => p.risk) && (
-                <p className="danger-text">{t("criticalWarning")}</p>
-              )}
               <ul className="target-list" role="list">
                 {value.targets.map((p) => {
                   const key = identityKey(p);
@@ -121,30 +121,42 @@ export function ProcessDialog({
                 })}
               </ul>
             </ModalBody>
-            <ModalFooter className="dialog-actions">
-              <Button
-                variant="light"
-                className="tool-button"
-                disableRipple
-                onPress={onClose}
-                autoFocus
-              >
-                {t("cancel")}
-              </Button>
-              <Button
-                color="danger"
-                className="tool-button"
-                disableRipple
-                onPress={onConfirm}
-              >
-                {t(
-                  value.force
-                    ? "force"
-                    : value.targets.length === 1
-                      ? "terminate"
-                      : "terminateMany",
+            <ModalFooter className="dialog-actions process-dialog-footer">
+              <div className="process-dialog-warnings" id={warningsId}>
+                <p>{t("scopeWarning")}</p>
+                {value.force && (
+                  <p className="danger-text">{t("forceWarning")}</p>
                 )}
-              </Button>
+                {value.targets.some((p) => p.risk) && (
+                  <p className="danger-text">{t("criticalWarning")}</p>
+                )}
+              </div>
+              <div className="process-dialog-buttons">
+                <Button
+                  ref={cancel}
+                  variant="light"
+                  className="tool-button"
+                  disableRipple
+                  onPress={onClose}
+                >
+                  {t("cancel")}
+                </Button>
+                <Button
+                  color="danger"
+                  className="tool-button"
+                  disableRipple
+                  aria-describedby={warningsId}
+                  onPress={onConfirm}
+                >
+                  {t(
+                    value.force
+                      ? "force"
+                      : value.targets.length === 1
+                        ? "terminate"
+                        : "terminateMany",
+                  )}
+                </Button>
+              </div>
             </ModalFooter>
           </>
         )}

@@ -187,29 +187,33 @@ export default function App() {
       )}
       {chosen.length > 0 && (
         <div className="batch-bar">
-          <div className="batch-summary" role="status">
-            <strong>{t("selectedRows", { count: chosen.length })}</strong>
-            <span>{t("processCount", { count: selectedTargets.length })}</span>
-            {hiddenSelection > 0 && (
-              <span className="hidden-selection">
-                {t("hiddenSelection", { count: hiddenSelection })}
+          <div className="batch-summary">
+            <div className="batch-counts" role="status">
+              <strong>{t("selectedRows", { count: chosen.length })}</strong>
+              <span>
+                {t("processCount", { count: selectedTargets.length })}
               </span>
+            </div>
+            {hiddenSelection > 0 && (
+              <div className="batch-hidden">
+                <strong role="status">
+                  {t("hiddenSelection", { count: hiddenSelection })}
+                </strong>
+                <Button
+                  variant="light"
+                  size="sm"
+                  disableRipple
+                  onPress={() => {
+                    setSelected(new Set(visibleSelection));
+                    search.current?.focus();
+                  }}
+                >
+                  {t("clearHiddenSelection")}
+                </Button>
+              </div>
             )}
           </div>
           <div className="batch-actions">
-            {hiddenSelection > 0 && (
-              <Button
-                variant="light"
-                size="sm"
-                disableRipple
-                onPress={() => {
-                  setSelected(new Set(visibleSelection));
-                  search.current?.focus();
-                }}
-              >
-                {t("clearHiddenSelection")}
-              </Button>
-            )}
             <Button
               variant="light"
               size="sm"
