@@ -76,12 +76,12 @@ export function ProcessDialog({
       disableAnimation
       placement="center"
       scrollBehavior="inside"
-      classNames={{ base: "dialog process-dialog" }}
+      classNames={{ base: "dialog", header: "dialog-header" }}
     >
       <ModalContent>
         {value && (
           <>
-            <ModalHeader>
+            <ModalHeader as="h2">
               {t(value.force ? "confirmForce" : "confirmEnd", {
                 count: value.targets.length,
               })}
@@ -121,11 +121,22 @@ export function ProcessDialog({
                 })}
               </ul>
             </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={onClose} autoFocus>
+            <ModalFooter className="dialog-actions">
+              <Button
+                variant="light"
+                className="tool-button"
+                disableRipple
+                onPress={onClose}
+                autoFocus
+              >
                 {t("cancel")}
               </Button>
-              <Button color="danger" onPress={onConfirm}>
+              <Button
+                color="danger"
+                className="tool-button"
+                disableRipple
+                onPress={onConfirm}
+              >
                 {t(
                   value.force
                     ? "force"

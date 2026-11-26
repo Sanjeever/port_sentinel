@@ -280,7 +280,9 @@ describe("desktop workspace", () => {
       fireEvent.click(screen.getByRole("button", { name: text.newUpdate }));
       fireEvent.click(await screen.findByRole("tab", { name: text.about }));
       fireEvent.click(
-        screen.getByRole("button", { name: `${text.updateAvailable} · 2.1.0` }),
+        screen.getByRole("button", {
+          name: text.updateAvailable.replace("{{version}}", "2.1.0"),
+        }),
       );
       const dialog = await screen.findByRole("dialog", {
         name: text.installConfirm.replace("{{version}}", "2.1.0"),
@@ -302,10 +304,24 @@ describe("desktop workspace", () => {
           sequence: 2,
         }),
       );
-      expect(within(dialog).getByRole("progressbar")).toHaveAttribute(
-        "value",
-        "512",
+      expect(
+        within(dialog).getByRole("progressbar", { name: text.downloading }),
+      ).toHaveAttribute("value", "512");
+      await act(async () =>
+        receive({
+          ...state,
+          update: {
+            ...state.update,
+            phase: "downloading",
+            downloaded: 512,
+            total: 0,
+          },
+          sequence: 3,
+        }),
       );
+      expect(
+        within(dialog).getByRole("progressbar", { name: text.downloading }),
+      ).not.toHaveAttribute("value");
       expect(
         within(dialog).queryByRole("button", { name: text.close }),
       ).not.toBeInTheDocument();
@@ -317,7 +333,7 @@ describe("desktop workspace", () => {
         receive({
           ...state,
           update: { ...state.update, phase: "installing" },
-          sequence: 3,
+          sequence: 4,
         }),
       );
       expect(
@@ -343,7 +359,7 @@ describe("desktop workspace", () => {
     );
     fireEvent.click(await screen.findByRole("tab", { name: "About" }));
     fireEvent.click(
-      screen.getByRole("button", { name: "Update available · 2.1.0" }),
+      screen.getByRole("button", { name: "Update available (2.1.0)" }),
     );
     const dialog = screen
       .getAllByRole("dialog")

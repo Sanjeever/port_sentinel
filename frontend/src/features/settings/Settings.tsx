@@ -14,6 +14,7 @@ import type { Preferences, View } from "../../desktop/types";
 import { backend } from "../../desktop/api";
 import { Feedback } from "../../components/Feedback";
 import { LocalizedClose } from "../../components/LocalizedClose";
+import { SelectControl } from "../../components/SelectControl";
 import { UpdateDialog } from "./UpdateDialog";
 
 export function Settings({
@@ -37,19 +38,31 @@ export function Settings({
         closeButton={<LocalizedClose />}
         isOpen
         onClose={onClose}
+        disableAnimation
         scrollBehavior="inside"
-        classNames={{ base: "dialog settings-dialog" }}
+        classNames={{
+          base: "dialog settings-dialog",
+          header: "dialog-header",
+          body: "settings-body",
+        }}
       >
         <ModalContent>
-          <ModalHeader>{t("settings")}</ModalHeader>
+          <ModalHeader as="h2">{t("settings")}</ModalHeader>
           <ModalBody>
-            <Tabs aria-label={t("settings")} variant="underlined">
+            <Tabs
+              aria-label={t("settings")}
+              color="primary"
+              variant="underlined"
+              classNames={{
+                tabList: "settings-tabs",
+                panel: "settings-tab-panel",
+              }}
+            >
               <Tab key="general" title={t("general")}>
                 <div className="settings-fields">
                   <label>
                     {t("language")}
-                    <select
-                      aria-label={t("language")}
+                    <SelectControl
                       value={p.language}
                       onChange={(e) =>
                         save({
@@ -58,14 +71,17 @@ export function Settings({
                       }
                     >
                       <option value="system">{t("system")}</option>
-                      <option value="zh-CN">简体中文</option>
-                      <option value="en">English</option>
-                    </select>
+                      <option value="zh-CN" lang="zh-CN">
+                        简体中文
+                      </option>
+                      <option value="en" lang="en">
+                        English
+                      </option>
+                    </SelectControl>
                   </label>
                   <label>
                     {t("theme")}
-                    <select
-                      aria-label={t("theme")}
+                    <SelectControl
                       value={p.theme}
                       onChange={(e) =>
                         save({ theme: e.target.value as Preferences["theme"] })
@@ -76,40 +92,43 @@ export function Settings({
                           {t(v)}
                         </option>
                       ))}
-                    </select>
+                    </SelectControl>
                   </label>
-                  <Switch
-                    size="sm"
-                    isSelected={p.autoRefresh}
-                    onValueChange={(v) => save({ autoRefresh: v })}
-                  >
-                    {t("autoRefresh")}
-                  </Switch>
-                  <label>
-                    {t("interval")}
-                    <select
-                      aria-label={t("interval")}
-                      value={p.interval}
-                      onChange={(e) =>
-                        save({ interval: Number(e.target.value) })
-                      }
+                  <div className="refresh-settings">
+                    <Switch
+                      className="setting-toggle"
+                      classNames={{ label: "switch-label" }}
+                      size="sm"
+                      isSelected={p.autoRefresh}
+                      onValueChange={(v) => save({ autoRefresh: v })}
                     >
-                      {[2, 5, 10, 30].map((v) => (
-                        <option key={v} value={v}>
-                          {t("seconds", { count: v })}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                      {t("autoRefresh")}
+                    </Switch>
+                    <label>
+                      {t("interval")}
+                      <SelectControl
+                        value={p.interval}
+                        onChange={(e) =>
+                          save({ interval: Number(e.target.value) })
+                        }
+                      >
+                        {[2, 5, 10, 30].map((v) => (
+                          <option key={v} value={v}>
+                            {t("seconds", { count: v })}
+                          </option>
+                        ))}
+                      </SelectControl>
+                    </label>
+                  </div>
                 </div>
               </Tab>
               <Tab key="about" title={t("about")}>
                 <dl className="build-info">
                   <dt>{t("version")}</dt>
-                  <dd>
-                    {view.build.version}{" "}
+                  <dd className="version-value">
+                    <span className="mono">{view.build.version}</span>
                     {view.build.development && (
-                      <span>· {t("development")}</span>
+                      <span className="muted">{t("development")}</span>
                     )}
                   </dd>
                   <dt>{t("commit")}</dt>
@@ -118,6 +137,8 @@ export function Settings({
                   </dd>
                 </dl>
                 <Switch
+                  className="setting-toggle"
+                  classNames={{ label: "switch-label" }}
                   size="sm"
                   isSelected={p.autoUpdate}
                   onValueChange={(v) => save({ autoUpdate: v })}
@@ -127,7 +148,9 @@ export function Settings({
                 <div className="update-actions">
                   <Button
                     size="sm"
-                    variant="flat"
+                    className="tool-button tool-button-outlined"
+                    variant="bordered"
+                    disableRipple
                     isDisabled={view.build.development || !!u.phase}
                     onPress={() => run(() => backend().CheckUpdate())}
                   >
@@ -135,7 +158,9 @@ export function Settings({
                   </Button>
                   <Button
                     size="sm"
+                    className="tool-button"
                     variant="light"
+                    disableRipple
                     onPress={() =>
                       run(() =>
                         backend().OpenURL(
@@ -154,9 +179,11 @@ export function Settings({
                   <Button
                     size="sm"
                     color="primary"
+                    className="tool-button"
+                    disableRipple
                     onPress={() => setInstall(true)}
                   >
-                    {t("updateAvailable")} · {u.version}
+                    {t("updateAvailable", { version: u.version })}
                   </Button>
                 )}
                 <Feedback

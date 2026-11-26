@@ -50,7 +50,7 @@ export default function App() {
       const dark =
         p.theme === "dark" || (p.theme === "system" && media.matches);
       document.documentElement.classList.toggle("dark", dark);
-      document.documentElement.style.colorScheme = dark ? "dark" : "light";
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
     };
     apply();
     media.addEventListener("change", apply);
@@ -86,7 +86,7 @@ export default function App() {
         <p role="status">{t("scanning")}</p>
       ) : view.error && !view.lastSuccess ? (
         <Button
-          className="tool-button"
+          className="tool-button tool-button-outlined"
           variant="bordered"
           onPress={() => run(() => backend().Refresh(false))}
           isDisabled={busy}
@@ -104,7 +104,7 @@ export default function App() {
           </p>
           {filtered && view.entries.length > 0 && (
             <Button
-              className="tool-button"
+              className="tool-button tool-button-outlined"
               variant="bordered"
               onPress={() => {
                 search.current?.focus();
@@ -120,7 +120,7 @@ export default function App() {
             view.preferences.scope === "listening" &&
             view.entries.length > 0 && (
               <Button
-                className="tool-button"
+                className="tool-button tool-button-outlined"
                 variant="bordered"
                 onPress={() => {
                   search.current?.focus();
@@ -341,6 +341,7 @@ export default function App() {
           )}
           <Switch
             size="sm"
+            classNames={{ label: "switch-label" }}
             isSelected={view.preferences.autoRefresh}
             onValueChange={(value) => save({ autoRefresh: value })}
           >

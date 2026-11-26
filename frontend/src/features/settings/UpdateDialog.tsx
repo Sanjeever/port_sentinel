@@ -4,6 +4,7 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
+  ModalFooter,
 } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
@@ -26,6 +27,11 @@ export function UpdateDialog({
   run: (f: () => Promise<unknown>) => void;
 }) {
   const { t, i18n } = useTranslation();
+  const size = new Intl.NumberFormat(i18n.resolvedLanguage, {
+    style: "unit",
+    unit: "byte",
+    unitDisplay: "short",
+  });
   return (
     <Modal
       closeButton={<LocalizedClose />}
@@ -33,13 +39,17 @@ export function UpdateDialog({
       onClose={() => {
         if (!u.phase) onClose();
       }}
+      disableAnimation
       scrollBehavior="inside"
-      classNames={{ base: "dialog update-dialog" }}
+      classNames={{ base: "dialog update-dialog", header: "dialog-header" }}
       isDismissable={!u.phase}
+      isKeyboardDismissDisabled={!!u.phase}
       hideCloseButton={!!u.phase}
     >
       <ModalContent>
-        <ModalHeader>{t("installConfirm", { version: u.version })}</ModalHeader>
+        <ModalHeader as="h2">
+          {t("installConfirm", { version: u.version })}
+        </ModalHeader>
         <ModalBody>
           <p className="muted">
             {t("currentVersion", { version: build.version })}
@@ -50,6 +60,7 @@ export function UpdateDialog({
               components={{
                 a: ({ children, href }) => (
                   <button
+                    type="button"
                     className="text-link"
                     onClick={() => {
                       if (href) run(() => backend().OpenURL(href));
@@ -72,55 +83,69 @@ export function UpdateDialog({
             }
           />
           {u.phase === "downloading" && (
-            <>
-              <progress value={u.downloaded} max={u.total || undefined} />
+            <div className="download-progress">
+              <progress
+                aria-label={t("downloading")}
+                value={u.total ? u.downloaded : undefined}
+                max={u.total || undefined}
+              />
               <p className="mono">
-                {new Intl.NumberFormat(i18n.resolvedLanguage).format(
-                  u.downloaded,
-                )}{" "}
-                / {new Intl.NumberFormat(i18n.resolvedLanguage).format(u.total)}
+                {size.format(u.downloaded)}
+                {u.total > 0 && <> / {size.format(u.total)}</>}
               </p>
-            </>
+            </div>
           )}
-          <div className="update-actions">
-            {u.error && (
+        </ModalBody>
+        <ModalFooter className="dialog-actions">
+          {u.error && (
+            <Button
+              variant="light"
+              className="tool-button"
+              disableRipple
+              onPress={() =>
+                run(() =>
+                  backend().OpenURL(
+                    "https://github.com/Sanjeever/port_sentinel/releases",
+                  ),
+                )
+              }
+            >
+              {t("manualDownload")}
+            </Button>
+          )}
+          {u.phase ? (
+            <Button
+              variant="flat"
+              className="tool-button"
+              disableRipple
+              isDisabled={u.phase === "installing"}
+              onPress={() => run(() => backend().CancelUpdate())}
+            >
+              {t(u.phase === "installing" ? "installing" : "cancel")}
+            </Button>
+          ) : (
+            <>
               <Button
                 variant="light"
-                onPress={() =>
-                  run(() =>
-                    backend().OpenURL(
-                      "https://github.com/Sanjeever/port_sentinel/releases",
-                    ),
-                  )
-                }
+                className="tool-button"
+                disableRipple
+                onPress={onClose}
+                autoFocus
               >
-                {t("manualDownload")}
+                {t("cancel")}
               </Button>
-            )}
-            {u.phase ? (
               <Button
-                variant="flat"
-                isDisabled={u.phase === "installing"}
-                onPress={() => run(() => backend().CancelUpdate())}
+                color="primary"
+                className="tool-button"
+                disableRipple
+                isDisabled={build.development}
+                onPress={() => run(() => backend().InstallUpdate())}
               >
-                {t(u.phase === "installing" ? "installing" : "cancel")}
+                {t("install")}
               </Button>
-            ) : (
-              <>
-                <Button variant="light" onPress={onClose}>
-                  {t("cancel")}
-                </Button>
-                <Button
-                  color="primary"
-                  isDisabled={build.development}
-                  onPress={() => run(() => backend().InstallUpdate())}
-                >
-                  {t("install")}
-                </Button>
-              </>
-            )}
-          </div>
-        </ModalBody>
+            </>
+          )}
+        </ModalFooter>
       </ModalContent>
     </Modal>
   );

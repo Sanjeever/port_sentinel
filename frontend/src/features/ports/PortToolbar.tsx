@@ -1,8 +1,9 @@
 import { Button, Input } from "@heroui/react";
-import { ChevronDown, RefreshCw, Search, ShieldCheck, X } from "lucide-react";
+import { RefreshCw, Search, ShieldCheck, X } from "lucide-react";
 import { useEffect, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import type { Preferences } from "../../desktop/types";
+import { SelectControl } from "../../components/SelectControl";
 
 export function PortToolbar({
   query,
@@ -79,33 +80,27 @@ export function PortToolbar({
         }
       />
       <div className="filters">
-        <div className="select-control">
-          <select
-            aria-label={t("scope")}
-            value={preferences.scope}
-            onChange={(e) =>
-              save({ scope: e.target.value as Preferences["scope"] })
-            }
-          >
-            <option value="listening">{t("listening")}</option>
-            <option value="all">{t("allConnections")}</option>
-          </select>
-          <ChevronDown size={14} aria-hidden="true" />
-        </div>
-        <div className="select-control">
-          <select
-            aria-label={t("protocol")}
-            value={preferences.protocol}
-            onChange={(e) =>
-              save({ protocol: e.target.value as Preferences["protocol"] })
-            }
-          >
-            <option value="ALL">{t("allProtocols")}</option>
-            <option value="TCP">TCP</option>
-            <option value="UDP">UDP</option>
-          </select>
-          <ChevronDown size={14} aria-hidden="true" />
-        </div>
+        <SelectControl
+          aria-label={t("scope")}
+          value={preferences.scope}
+          onChange={(e) =>
+            save({ scope: e.target.value as Preferences["scope"] })
+          }
+        >
+          <option value="listening">{t("listening")}</option>
+          <option value="all">{t("allConnections")}</option>
+        </SelectControl>
+        <SelectControl
+          aria-label={t("protocol")}
+          value={preferences.protocol}
+          onChange={(e) =>
+            save({ protocol: e.target.value as Preferences["protocol"] })
+          }
+        >
+          <option value="ALL">{t("allProtocols")}</option>
+          <option value="TCP">TCP</option>
+          <option value="UDP">UDP</option>
+        </SelectControl>
       </div>
       <div className="refresh-controls">
         <Button
@@ -128,7 +123,7 @@ export function PortToolbar({
         <Button
           size="sm"
           variant="bordered"
-          className="tool-button"
+          className="tool-button tool-button-outlined"
           disableRipple
           isDisabled={!!task}
           startContent={<ShieldCheck size={15} aria-hidden="true" />}
