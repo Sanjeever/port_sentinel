@@ -10,9 +10,9 @@ The original release was featured in Ruan YiFeng's [Technology Enthusiasts Weekl
 
 ## Features
 
-- TCP/UDP and IPv4/IPv6, listening ports or all connections; local/remote addresses, state, PID, process name and readable executable paths.
-- Search by port, PID or process name; protocol filtering, numeric sorting, row menus and copying. Process details include the start time, working directory and current parent chain when available.
-- Select the filtered rows and end deduplicated processes after confirmation. Graceful exit and force termination are separate actions. The results show the process outcome and what the recheck found on its listening or bound endpoints.
+- View TCP/UDP and IPv4/IPv6 listeners, bindings or all connections. The table keeps the local address and state visible in narrow windows.
+- Press **⌘F** on macOS or **Ctrl+F** on Windows and Linux to search by port, PID or process name. Exact port and PID matches appear first. Process details show the selected connection and available process information, including the executable path, working directory and current parent chain.
+- Select filtered rows and end deduplicated processes after confirmation. Clear selections outside the current filters separately. Graceful exit and force termination have separate confirmations. Results show the process outcome and what the recheck found on its listening or bound endpoints.
 - Configurable automatic refresh.
 - English and Simplified Chinese; light, dark and system themes; saved local preferences and window size.
 - Official Release update checks, release notes, cancellable downloads and confirmed installation/restart. Closing the window exits the app.
