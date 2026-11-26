@@ -1,10 +1,4 @@
-import {
-  Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-} from "@heroui/react";
+import { Button, Modal, ModalContent, ModalHeader } from "@heroui/react";
 import { Copy, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -154,23 +148,44 @@ export function Details({
           identityKey(candidate.process) === identityKey(p),
       )
     : [];
+  const title = endpoint.local || String(endpoint.port);
+  const copyEndpoint = (
+    <Button
+      isIconOnly
+      variant="light"
+      size="sm"
+      disableRipple
+      aria-label={t("copyLocal")}
+      title={t("copyLocal")}
+      isDisabled={!endpoint.local}
+      onPress={() => run(() => backend().Copy(endpoint.local))}
+    >
+      <Copy size={14} aria-hidden="true" />
+    </Button>
+  );
   const content = (
     <>
-      <section className="inspector-section">
-        <h3 className="inspector-label">{t("currentEndpoint")}</h3>
-        <div className="endpoint-title">
-          <span className="mono">{endpoint.local || endpoint.port}</span>
-          <Button
-            isIconOnly
-            variant="light"
-            size="sm"
-            disableRipple
-            aria-label={t("copyLocal")}
-            isDisabled={!endpoint.local}
-            onPress={() => run(() => backend().Copy(endpoint.local))}
-          >
-            <Copy size={14} aria-hidden="true" />
-          </Button>
+      <div className="inspector-section endpoint-overview">
+        <div className="inspector-process">
+          <strong>
+            {p.name || t(p.status === "no_pid" ? "no_pid" : "unreadable")}
+          </strong>
+          {p.pid > 0 && (
+            <>
+              <span className="mono muted">PID {p.pid}</span>
+              <Button
+                isIconOnly
+                variant="light"
+                size="sm"
+                disableRipple
+                aria-label={t("copyPID")}
+                title={t("copyPID")}
+                onPress={() => run(() => backend().Copy(String(p.pid)))}
+              >
+                <Copy size={14} aria-hidden="true" />
+              </Button>
+            </>
+          )}
         </div>
         <p className="endpoint-meta">
           <span>{endpoint.protocol}</span>
@@ -191,27 +206,7 @@ export function Details({
             {t("endpointMissing")}
           </p>
         )}
-        <div className="inspector-process">
-          <strong>
-            {p.name || t(p.status === "no_pid" ? "no_pid" : "unreadable")}
-          </strong>
-          {p.pid > 0 && (
-            <>
-              <span className="mono muted">PID {p.pid}</span>
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                disableRipple
-                aria-label={t("copyPID")}
-                onPress={() => run(() => backend().Copy(String(p.pid)))}
-              >
-                <Copy size={14} aria-hidden="true" />
-              </Button>
-            </>
-          )}
-        </div>
-      </section>
+      </div>
       {related.length > 0 && (
         <section className="inspector-section">
           <h3>{t("related")}</h3>
@@ -236,7 +231,7 @@ export function Details({
       )}
       <section className="inspector-section">
         <h3>{t("processInfo")}</h3>
-        <dl className="details-grid">
+        <dl className="process-path">
           <dt>{t("path")}</dt>
           <dd className="detail-value-action">
             <span className={p.path ? "path" : undefined}>
@@ -254,12 +249,15 @@ export function Details({
                 size="sm"
                 disableRipple
                 aria-label={t("copyPath")}
+                title={t("copyPath")}
                 onPress={() => run(() => backend().Copy(p.path))}
               >
                 <Copy size={14} aria-hidden="true" />
               </Button>
             )}
           </dd>
+        </dl>
+        <dl className="details-grid">
           {hasIdentity && (
             <>
               <dt>{t("startedAt")}</dt>
@@ -308,7 +306,12 @@ export function Details({
         }}
       >
         <header className="inspector-header">
-          <h2 id="inspector-title">{t("details")}</h2>
+          <div className="endpoint-title">
+            <h2 className="mono" id="inspector-title">
+              {title}
+            </h2>
+            {copyEndpoint}
+          </div>
           <Button
             ref={close}
             isIconOnly
@@ -337,13 +340,18 @@ export function Details({
       classNames={{
         wrapper: "detail-wrapper",
         base: "detail-panel",
-        header: "inspector-header",
-        body: "inspector-body",
       }}
     >
       <ModalContent>
-        <ModalHeader as="h2">{t("details")}</ModalHeader>
-        <ModalBody>{content}</ModalBody>
+        <header className="inspector-header">
+          <div className="endpoint-title">
+            <ModalHeader as="h2" className="mono">
+              {title}
+            </ModalHeader>
+            {copyEndpoint}
+          </div>
+        </header>
+        <div className="inspector-body">{content}</div>
       </ModalContent>
     </Modal>
   );

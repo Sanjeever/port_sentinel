@@ -2,6 +2,11 @@ import type { Entry, Identity, Preferences } from "../../desktop/types";
 export function identityKey(p: Pick<Identity, "pid" | "created">) {
   return `${p.pid}:${p.created}`;
 }
+export function inScope(entry: Entry, scope: Preferences["scope"]) {
+  return (
+    scope === "all" || entry.protocol === "UDP" || entry.state === "LISTEN"
+  );
+}
 export function visibleEntries(
   entries: Entry[],
   p: Preferences,
@@ -15,7 +20,7 @@ export function visibleEntries(
   return entries
     .filter(
       (e) =>
-        (p.scope === "all" || e.protocol === "UDP" || e.state === "LISTEN") &&
+        inScope(e, p.scope) &&
         (p.protocol === "ALL" || e.protocol === p.protocol) &&
         (!q ||
           String(e.port).includes(q) ||

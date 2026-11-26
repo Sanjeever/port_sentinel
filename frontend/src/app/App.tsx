@@ -9,6 +9,7 @@ import {
   retainSelection,
   targets,
   identityKey,
+  inScope,
 } from "../features/ports/list";
 import i18n, { resolveLanguage } from "../i18n";
 import type { Entry } from "../desktop/types";
@@ -79,61 +80,57 @@ export default function App() {
     : [];
   const hiddenSelection = chosen.length - visibleSelection.length;
   const busy = !!view.task;
-  const filtered = !!query.trim() || view.preferences.protocol !== "ALL";
-  const empty = rows.length === 0 && (
-    <div className="empty-state">
-      {view.task === "scanning" && !view.lastSuccess ? (
-        <p role="status">{t("scanning")}</p>
-      ) : view.error && !view.lastSuccess ? (
-        <Button
-          className="tool-button tool-button-outlined"
-          variant="bordered"
-          onPress={() => run(() => backend().Refresh(false))}
-          isDisabled={busy}
-        >
-          {t("refresh")}
-        </Button>
-      ) : (
-        <>
-          <p role="status">
-            {filtered && view.entries.length
-              ? t("noResults")
-              : t(
-                  view.preferences.scope === "listening" ? "empty" : "emptyAll",
-                )}
-          </p>
-          {filtered && view.entries.length > 0 && (
-            <Button
-              className="tool-button tool-button-outlined"
-              variant="bordered"
-              onPress={() => {
-                search.current?.focus();
-                setQuery("");
-                if (view.preferences.protocol !== "ALL")
-                  save({ protocol: "ALL" });
-              }}
-            >
-              {t("clearFilters")}
-            </Button>
-          )}
-          {!filtered &&
-            view.preferences.scope === "listening" &&
-            view.entries.length > 0 && (
-              <Button
-                className="tool-button tool-button-outlined"
-                variant="bordered"
-                onPress={() => {
-                  search.current?.focus();
-                  save({ scope: "all" });
-                }}
-              >
-                {t("allConnections")}
-              </Button>
-            )}
-        </>
-      )}
-    </div>
-  );
+  let empty = null;
+  if (!rows.length) {
+    const { scope, protocol } = view.preferences;
+    const hasScopedEntries = view.entries.some((entry) =>
+      inScope(entry, scope),
+    );
+    let message = t(scope === "listening" ? "empty" : "emptyAll");
+    let recovery: { label: string; press: () => void } | undefined;
+    if (view.task === "scanning" && !view.lastSuccess) {
+      message = t("scanning");
+    } else if (view.error && !view.lastSuccess) {
+      message = "";
+      recovery = {
+        label: t("refresh"),
+        press: () => run(() => backend().Refresh(false)),
+      };
+    } else if (hasScopedEntries) {
+      message = t("noResults");
+      recovery =
+        protocol !== "ALL"
+          ? {
+              label: t("showAllProtocols"),
+              press: () => save({ protocol: "ALL" }),
+            }
+          : { label: t("clearSearch"), press: () => setQuery("") };
+    } else if (scope === "listening" && view.entries.length) {
+      recovery = {
+        label: t("allConnections"),
+        press: () => save({ scope: "all" }),
+      };
+    }
+    const action = recovery;
+    empty = (
+      <div className="empty-state">
+        {message && <p role="status">{message}</p>}
+        {action && (
+          <Button
+            className="tool-button tool-button-outlined"
+            variant="bordered"
+            isDisabled={!view.lastSuccess && busy}
+            onPress={() => {
+              search.current?.focus();
+              action.press();
+            }}
+          >
+            {action.label}
+          </Button>
+        )}
+      </div>
+    );
+  }
   const confirm = (
     entries: Entry[],
     force = false,

@@ -107,8 +107,15 @@ describe("desktop workspace", () => {
       const trigger = screen.getAllByRole("button", { name: "Node" })[0];
       trigger.focus();
       fireEvent.click(trigger);
-      const dialog = await screen.findByRole("dialog", { name: text.details });
-      expect(within(dialog).getByText(text.currentEndpoint)).toBeVisible();
+      const endpoint = state.entries[0].local;
+      const dialog = await screen.findByRole("dialog", { name: endpoint });
+      expect(
+        within(dialog).getByRole("heading", { name: endpoint }),
+      ).toBeVisible();
+      fireEvent.click(
+        within(dialog).getByRole("button", { name: text.copyLocal }),
+      );
+      await waitFor(() => expect(bridge.Copy).toHaveBeenCalledWith(endpoint));
       await waitFor(() =>
         expect(within(dialog).getByText("/projects/admin")).toBeVisible(),
       );
@@ -172,18 +179,43 @@ describe("desktop workspace", () => {
       ).toBeDisabled();
     },
   );
-  it("focuses search with the shortcut and restores it when clearing filters", async () => {
+  it("focuses search with the shortcut and restores it when clearing the query", async () => {
     await start();
     const search = screen.getByLabelText(en.search);
     fireEvent.keyDown(document, { key: "f", ctrlKey: true });
     expect(search).toHaveFocus();
     fireEvent.change(search, { target: { value: "Not a process" } });
     expect(screen.getByText(en.noResults)).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: en.clearFilters }));
+    const table = screen.getByRole("region", { name: en.connections });
+    fireEvent.click(
+      within(table).getByRole("button", { name: en.clearSearch }),
+    );
     expect(search).toHaveFocus();
     expect(search).toHaveValue("");
     expect(screen.getByRole("rowheader", { name: "8080" })).toBeVisible();
   });
+  it.each([
+    { language: "en" as const, text: en },
+    { language: "zh-CN" as const, text: zh },
+  ])(
+    "widens the protocol filter without clearing the query in $language",
+    async ({ language, text }) => {
+      state.preferences.language = language;
+      state.preferences.protocol = "UDP";
+      await start(text.search);
+      const search = screen.getByLabelText(text.search);
+      fireEvent.change(search, { target: { value: "8080" } });
+      expect(screen.getByText(text.noResults)).toBeVisible();
+      fireEvent.click(
+        screen.getByRole("button", { name: text.showAllProtocols }),
+      );
+      expect(search).toHaveFocus();
+      expect(search).toHaveValue("8080");
+      expect(
+        await screen.findByRole("rowheader", { name: "8080" }),
+      ).toBeVisible();
+    },
+  );
   it("keeps dismissed results hidden until another operation completes", async () => {
     await start();
     const result = {

@@ -613,6 +613,7 @@ pre {
   background: var(--surface);
   color: inherit;
   border-left: 1px solid var(--line);
+  animation: drawer-in 140ms ease-out;
 }
 .inspector {
   display: flex;
@@ -627,17 +628,12 @@ pre {
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  min-height: 44px;
-  padding: 4px 16px;
-  border-bottom: 1px solid var(--line);
-  font-size: 13px;
-  font-weight: 600;
+  min-height: 48px;
+  padding: 8px 12px 0 16px;
+  background: var(--surface-muted);
 }
 .detail-panel .inspector-header {
   padding-inline-end: 44px;
-}
-.inspector-header h2 {
-  font-size: inherit;
 }
 .inspector-body {
   min-height: 0;
@@ -657,33 +653,46 @@ pre {
   font-size: 13px;
   font-weight: 600;
 }
-.inspector-section .inspector-label {
-  margin-bottom: 0;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 500;
+.endpoint-overview {
+  padding-block-start: 0;
+  background: var(--surface-muted);
 }
 .endpoint-title,
 .inspector-process {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 4px 8px;
+  min-width: 0;
 }
-.endpoint-title > .mono {
+.endpoint-title {
+  flex: 1;
+}
+.endpoint-title > h2 {
+  display: block;
+  flex: 0 1 auto;
+  padding: 0;
   font-size: 16px;
   font-weight: 600;
   overflow-wrap: anywhere;
+  text-wrap: wrap;
+}
+.endpoint-title > button,
+.inspector-header > button {
+  flex-shrink: 0;
 }
 .endpoint-meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   color: var(--muted);
   font-size: 12px;
 }
 .inspector-process {
-  margin-top: 8px;
+  flex-wrap: wrap;
   overflow-wrap: anywhere;
+}
+.process-path {
+  margin-bottom: 12px;
 }
 .details-grid {
   display: grid;
@@ -693,14 +702,15 @@ pre {
   margin-top: 8px;
 }
 .details-grid dt,
+.process-path dt,
 .process-context-fields dt {
   color: var(--muted);
-  font-size: 11px;
-  padding-top: 4px;
+  font-size: 12px;
+  align-self: start;
 }
 .details-grid dd,
+.process-path dd,
 .process-context-fields dd {
-  min-height: 22px;
   overflow-wrap: anywhere;
 }
 .detail-value-action {
@@ -717,7 +727,9 @@ pre {
 .process-context {
   flex: none;
   font-size: 13px;
-  margin-top: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
 }
 .process-context-fields dt {
   margin-bottom: 4px;
@@ -958,8 +970,15 @@ pre {
     transform: rotate(360deg);
   }
 }
+@keyframes drawer-in {
+  from {
+    transform: translateX(12px);
+    opacity: 0;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .spinning {
+  .spinning,
+  .detail-panel {
     animation: none;
   }
 }
