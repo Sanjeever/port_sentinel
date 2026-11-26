@@ -438,6 +438,8 @@ span.ellipsis {
   flex-wrap: wrap;
 }
 .status-bar {
+  position: sticky;
+  inset-block-end: 0;
   justify-content: space-between;
   gap: 4px 12px;
   min-height: 40px;
@@ -445,6 +447,7 @@ span.ellipsis {
   border-top: 1px solid var(--line);
   padding: 4px var(--gutter);
   color: var(--muted);
+  background: var(--chrome);
   font-size: 12px;
 }
 .status-meta {
@@ -861,8 +864,11 @@ pre {
   flex-shrink: 0;
   border-top: 1px solid var(--line);
   background: var(--surface);
+  color: var(--ink);
 }
 .results-heading {
+  position: sticky;
+  inset-block-start: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
