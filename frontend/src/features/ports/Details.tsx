@@ -54,7 +54,7 @@ function ProcessContext({ pid, created }: { pid: number; created: number }) {
       </p>
       {!details && !failure && <p className="muted">{t("readingProcess")}</p>}
       {details && !details.error && (
-        <dl className="details-grid">
+        <dl className="process-context-fields">
           <dt>{t("workingDir")}</dt>
           <dd className={details.workingDir ? "path" : "muted"}>
             {details.workingDir ||
@@ -126,8 +126,8 @@ export function Details({
           </h2>
           <dl className="details-grid">
             <dt>PID</dt>
-            <dd>
-              {p.pid > 0 ? p.pid : t("no_pid")}
+            <dd className="detail-value-action">
+              <span>{p.pid > 0 ? p.pid : t("no_pid")}</span>
               <Button
                 isIconOnly
                 variant="light"
@@ -140,13 +140,15 @@ export function Details({
               </Button>
             </dd>
             <dt>{t("path")}</dt>
-            <dd className="path">
-              {p.path ||
-                t(
-                  p.pathStatus === "available"
-                    ? "pathUnavailable"
-                    : p.pathStatus,
-                )}
+            <dd className="detail-value-action">
+              <span className="path">
+                {p.path ||
+                  t(
+                    p.pathStatus === "available"
+                      ? "pathUnavailable"
+                      : p.pathStatus,
+                  )}
+              </span>
               {p.path && (
                 <Button
                   isIconOnly
