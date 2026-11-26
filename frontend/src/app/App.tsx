@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Button } from "@heroui/react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Button, Switch } from "@heroui/react";
 import { Settings as SettingsIcon, Network } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { backend } from "../desktop/api";
@@ -28,6 +28,7 @@ export default function App() {
   const { view, failure, run } = useDesktop();
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
+  const search = useRef<HTMLInputElement>(null);
   const [selected, setSelected] = useState(new Set<string>());
   const [detail, setDetail] = useState<Entry | null>(null);
   const [settings, setSettings] = useState(false);
@@ -73,6 +74,61 @@ export default function App() {
   const chosen = view.entries.filter((e) => selected.has(e.id));
   const selectedTargets = targets(chosen);
   const busy = !!view.task;
+  const filtered = !!query.trim() || view.preferences.protocol !== "ALL";
+  const empty = rows.length === 0 && (
+    <div className="empty-state">
+      {view.task === "scanning" && !view.lastSuccess ? (
+        <p role="status">{t("scanning")}</p>
+      ) : view.error && !view.lastSuccess ? (
+        <Button
+          className="tool-button"
+          variant="bordered"
+          onPress={() => run(() => backend().Refresh(false))}
+          isDisabled={busy}
+        >
+          {t("refresh")}
+        </Button>
+      ) : (
+        <>
+          <p role="status">
+            {filtered && view.entries.length
+              ? t("noResults")
+              : t(
+                  view.preferences.scope === "listening" ? "empty" : "emptyAll",
+                )}
+          </p>
+          {filtered && view.entries.length > 0 && (
+            <Button
+              className="tool-button"
+              variant="bordered"
+              onPress={() => {
+                search.current?.focus();
+                setQuery("");
+                if (view.preferences.protocol !== "ALL")
+                  save({ protocol: "ALL" });
+              }}
+            >
+              {t("clearFilters")}
+            </Button>
+          )}
+          {!filtered &&
+            view.preferences.scope === "listening" &&
+            view.entries.length > 0 && (
+              <Button
+                className="tool-button"
+                variant="bordered"
+                onPress={() => {
+                  search.current?.focus();
+                  save({ scope: "all" });
+                }}
+              >
+                {t("allConnections")}
+              </Button>
+            )}
+        </>
+      )}
+    </div>
+  );
   const confirm = (
     entries: Entry[],
     force = false,
@@ -94,13 +150,15 @@ export default function App() {
     <main className="workspace">
       <header className="app-header">
         <div className="brand">
-          <Network size={20} />
+          <Network size={19} aria-hidden="true" />
           <h1>Port Sentinel</h1>
         </div>
         <Button
           variant="light"
           size="sm"
-          startContent={<SettingsIcon size={17} />}
+          className="tool-button"
+          disableRipple
+          startContent={<SettingsIcon size={16} aria-hidden="true" />}
           aria-label={t(view.update.version ? "newUpdate" : "settings")}
           onPress={() => setSettings(true)}
         >
@@ -111,6 +169,7 @@ export default function App() {
       <PortToolbar
         query={query}
         setQuery={setQuery}
+        search={search}
         preferences={view.preferences}
         task={view.task}
         save={save}
@@ -130,6 +189,11 @@ export default function App() {
         </Button>
       )}
       <Feedback error={failure} />
+      {view.stale && (
+        <p className="scan-stale" role="status">
+          {t("stale")}
+        </p>
+      )}
       {chosen.length > 0 && (
         <div className="batch-bar">
           <span>
@@ -175,22 +239,8 @@ export default function App() {
           if (!busy) confirm(entries);
         }}
         run={run}
+        empty={empty}
       />
-      {rows.length === 0 && (
-        <div className="empty-state">
-          {view.task === "scanning" && !view.lastSuccess
-            ? t("scanning")
-            : view.error && !view.lastSuccess
-              ? t(view.error.code)
-              : view.entries.length
-                ? t("noResults")
-                : t(
-                    view.preferences.scope === "listening"
-                      ? "empty"
-                      : "emptyAll",
-                  )}
-        </div>
-      )}
       {view.results.length > 0 &&
         view.resultRevision !== dismissedResultRevision && (
           <ProcessResults
@@ -202,34 +252,45 @@ export default function App() {
             onForce={() => confirm([], true, canForce)}
           />
         )}
-      <footer>
-        <span>{t("count", { count: rows.length })}</span>
-        <span>
-          {view.lastSuccess
-            ? t("lastRefresh", {
-                time: new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                }).format(new Date(view.lastSuccess)),
-              })
-            : t("never")}
-        </span>
-        <span className={view.stale ? "danger-text" : "visibility"}>
-          {view.stale ? t("stale") : view.visibility ? t(view.visibility) : ""}
-        </span>
-        {busy && (
-          <>
-            <span role="status">{t(view.task)}</span>
-            <Button
-              size="sm"
-              variant="light"
-              onPress={() => run(() => backend().CancelTask())}
-            >
-              {t("cancel")}
-            </Button>
-          </>
-        )}
+      <footer className="status-bar">
+        <div className="status-meta">
+          <span>{t("count", { count: rows.length })}</span>
+          <span>
+            {view.lastSuccess
+              ? t("lastRefresh", {
+                  time: new Intl.DateTimeFormat(i18n.resolvedLanguage, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  }).format(new Date(view.lastSuccess)),
+                })
+              : t("never")}
+          </span>
+        </div>
+        <div className="scan-controls">
+          {busy && (
+            <>
+              <span role="status">{t(view.task)}</span>
+              <Button
+                size="sm"
+                variant="light"
+                onPress={() => run(() => backend().CancelTask())}
+              >
+                {t("cancel")}
+              </Button>
+            </>
+          )}
+          {view.visibility && (
+            <span className="visibility">{t(view.visibility)}</span>
+          )}
+          <Switch
+            size="sm"
+            isSelected={view.preferences.autoRefresh}
+            onValueChange={(value) => save({ autoRefresh: value })}
+          >
+            {t("autoRefresh")}
+          </Switch>
+        </div>
       </footer>
       <Details
         entry={detail}

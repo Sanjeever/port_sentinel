@@ -35,6 +35,18 @@ describe("connection list", () => {
       "a",
     ]);
   });
+  it("places exact port and PID matches before numeric partial matches", () => {
+    const similar = row("partial", 120, 8, "Other");
+    const matches = visibleEntries(
+      [...entries, similar],
+      { ...preferences, ascending: false },
+      "20",
+    );
+    expect(matches.map((e) => e.id)).toEqual(["b", "partial"]);
+    expect(
+      visibleEntries([...entries, similar], preferences, "2").map((e) => e.id),
+    ).toEqual(["b", "a", "partial"]);
+  });
 });
 it("provides matching bilingual dictionaries and runtime system language", () => {
   expect(Object.keys(zh).sort()).toEqual(Object.keys(en).sort());

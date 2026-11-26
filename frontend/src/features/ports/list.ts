@@ -8,6 +8,10 @@ export function visibleEntries(
   query: string,
 ) {
   const q = query.trim().toLocaleLowerCase();
+  const number = Number(q);
+  const numericQuery = /^\d+$/.test(q) && String(number) === q;
+  const exact = (entry: Entry) =>
+    entry.port === number || entry.process.pid === number;
   return entries
     .filter(
       (e) =>
@@ -19,6 +23,10 @@ export function visibleEntries(
           e.process.name.toLocaleLowerCase().includes(q)),
     )
     .sort((a, b) => {
+      if (numericQuery) {
+        const rank = Number(exact(b)) - Number(exact(a));
+        if (rank) return rank;
+      }
       let n = 0;
       switch (p.sort) {
         case "port":

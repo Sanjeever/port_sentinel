@@ -146,7 +146,7 @@ describe("desktop workspace", () => {
         target: { value: "Resolver" },
       });
       fireEvent.click(
-        within(toolbar).getByRole("button", { name: text.clear }),
+        within(toolbar).getByRole("button", { name: text.clearSearch }),
       );
       expect(within(toolbar).getByPlaceholderText(text.search)).toHaveValue("");
       fireEvent.click(
@@ -168,6 +168,18 @@ describe("desktop workspace", () => {
       ).toBeDisabled();
     },
   );
+  it("focuses search with the shortcut and restores it when clearing filters", async () => {
+    await start();
+    const search = screen.getByLabelText(en.search);
+    fireEvent.keyDown(document, { key: "f", ctrlKey: true });
+    expect(search).toHaveFocus();
+    fireEvent.change(search, { target: { value: "Not a process" } });
+    expect(screen.getByText(en.noResults)).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: en.clearFilters }));
+    expect(search).toHaveFocus();
+    expect(search).toHaveValue("");
+    expect(screen.getByRole("rowheader", { name: "8080" })).toBeVisible();
+  });
   it("keeps dismissed results hidden until another operation completes", async () => {
     await start();
     const result = {

@@ -5,9 +5,9 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import { ArrowDown, ArrowUp, MoreHorizontal } from "lucide-react";
+import { ArrowDown, ChevronRight, MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import type { Entry, Preferences } from "../../desktop/types";
 import { backend } from "../../desktop/api";
 
@@ -20,6 +20,7 @@ export function PortTable({
   details,
   end,
   run,
+  empty,
 }: {
   rows: Entry[];
   preferences: Preferences;
@@ -29,9 +30,11 @@ export function PortTable({
   details: (e: Entry) => void;
   end: (entries: Entry[]) => void;
   run: (f: () => Promise<unknown>) => void;
+  empty: ReactNode;
 }) {
   const { t } = useTranslation();
   const [menu, setMenu] = useState<string | null>(null);
+  const caption = useId();
   const actionable = rows.filter(
     (e) => e.process.pid > 1 && e.process.created > 0,
   );
@@ -45,54 +48,72 @@ export function PortTable({
     setSelected(next);
   };
   return (
-    <div className="table-scroll">
-      <table>
+    <div
+      className="table-scroll"
+      role="region"
+      aria-labelledby={caption}
+      tabIndex={0}
+    >
+      <table className="port-table" data-scope={preferences.scope}>
+        <caption className="sr-only" id={caption}>
+          {t("connections")}
+        </caption>
         <thead>
           <tr>
-            <th className="select-cell">
-              <input
-                aria-label={t("selectAll")}
-                type="checkbox"
-                checked={all}
-                ref={(node) => {
-                  if (node) node.indeterminate = some && !all;
-                }}
-                onChange={(e) => {
-                  const next = new Set(selected);
-                  for (const r of actionable) {
-                    if (e.target.checked) next.add(r.id);
-                    else next.delete(r.id);
-                  }
-                  setSelected(next);
-                }}
-              />
+            <th className="select-cell" scope="col">
+              <label className="row-check">
+                <input
+                  aria-label={t("selectAll")}
+                  type="checkbox"
+                  disabled={!actionable.length}
+                  checked={all}
+                  ref={(node) => {
+                    if (node) node.indeterminate = some && !all;
+                  }}
+                  onChange={(e) => {
+                    const next = new Set(selected);
+                    for (const r of actionable) {
+                      if (e.target.checked) next.add(r.id);
+                      else next.delete(r.id);
+                    }
+                    setSelected(next);
+                  }}
+                />
+              </label>
             </th>
-            {(["port", "protocol", "pid", "name"] as const).map((key) => (
+            {(["port", "name", "pid", "protocol"] as const).map((key) => (
               <th
                 key={key}
+                scope="col"
+                className={`column-${key} sortable-column`}
                 aria-sort={
                   preferences.sort === key
                     ? preferences.ascending
                       ? "ascending"
                       : "descending"
-                    : "none"
+                    : undefined
                 }
               >
-                <button className="sort-button" onClick={() => sort(key)}>
+                <button
+                  type="button"
+                  className="sort-button"
+                  onClick={() => sort(key)}
+                >
                   {t(key)}
-                  {preferences.sort === key &&
-                    (preferences.ascending ? (
-                      <ArrowUp size={12} />
-                    ) : (
-                      <ArrowDown size={12} />
-                    ))}
+                  <ArrowDown size={12} aria-hidden="true" />
                 </button>
               </th>
             ))}
-            <th className="secondary-column">{t("local")}</th>
-            <th className="secondary-column">{t("remote")}</th>
-            <th className="secondary-column">{t("state")}</th>
-            <th className="action-cell">
+            <th className="column-local" scope="col">
+              {t("local")}
+            </th>
+            <th className="column-remote" scope="col">
+              {t("remote")}
+            </th>
+            <th className="column-state" scope="col">
+              {t("state")}
+            </th>
+            <th className="action-cell" scope="col">
               <span className="sr-only">{t("actions")}</span>
             </th>
           </tr>
@@ -108,44 +129,60 @@ export function PortTable({
               }}
             >
               <td className="select-cell">
-                <input
-                  type="checkbox"
-                  aria-label={t("selectRow", {
-                    port: e.port,
-                    pid: e.process.pid,
-                  })}
-                  disabled={e.process.pid <= 1 || !e.process.created}
-                  checked={selected.has(e.id)}
-                  onChange={(event) => choose(e, event.target.checked)}
-                />
+                <label className="row-check">
+                  <input
+                    type="checkbox"
+                    aria-label={t("selectRow", {
+                      port: e.port,
+                      pid: e.process.pid,
+                    })}
+                    disabled={e.process.pid <= 1 || !e.process.created}
+                    checked={selected.has(e.id)}
+                    onChange={(event) => choose(e, event.target.checked)}
+                  />
+                </label>
               </td>
-              <td className="mono port-value">{e.port}</td>
-              <td>
-                <span className="protocol-label">{e.protocol}</span>
-              </td>
-              <td className="mono">
-                {e.process.pid > 0 ? e.process.pid : "—"}
-              </td>
+              <th scope="row" className="mono port-value">
+                {e.port}
+              </th>
               <td className="process-cell">
                 <button
+                  type="button"
                   className="process-link"
                   title={e.process.name || t("details")}
                   onClick={() => details(e)}
                 >
-                  {e.process.name ||
-                    t(e.process.status === "no_pid" ? "no_pid" : "unreadable")}
+                  <span>
+                    {e.process.name ||
+                      t(
+                        e.process.status === "no_pid" ? "no_pid" : "unreadable",
+                      )}
+                  </span>
+                  <ChevronRight size={13} aria-hidden="true" />
                 </button>
               </td>
-              <td className="secondary-column mono ellipsis" title={e.local}>
-                {e.local}
+              <td className="mono">
+                {e.process.pid > 0 ? e.process.pid : "—"}
+              </td>
+              <td className="protocol-label">{e.protocol}</td>
+              <td className="column-local">
+                <span className="mono ellipsis" title={e.local}>
+                  {e.local}
+                </span>
+                <span className="status-value compact-state">
+                  <span className="sr-only">{t("state")} </span>
+                  {t(`state_${e.state}`, { defaultValue: e.state || "—" })}
+                </span>
               </td>
               <td
-                className="secondary-column mono ellipsis"
+                className="column-remote mono ellipsis"
                 title={e.remote ?? ""}
               >
                 {e.remote ?? "—"}
               </td>
-              <td className="secondary-column status-value">{e.state}</td>
+              <td className="column-state status-value">
+                {t(`state_${e.state}`, { defaultValue: e.state || "—" })}
+              </td>
               <td className="action-cell">
                 <Dropdown
                   isOpen={menu === e.id}
@@ -156,9 +193,11 @@ export function PortTable({
                       isIconOnly
                       variant="light"
                       size="sm"
+                      className="row-menu-button"
+                      disableRipple
                       aria-label={t("actions") + ` ${e.port}`}
                     >
-                      <MoreHorizontal size={17} />
+                      <MoreHorizontal size={17} aria-hidden="true" />
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu
@@ -168,6 +207,7 @@ export function PortTable({
                         run(() => backend().Copy(String(e.process.pid)));
                       if (key === "port")
                         run(() => backend().Copy(String(e.port)));
+                      if (key === "local") run(() => backend().Copy(e.local));
                       if (key === "details") details(e);
                       if (key === "end") end([e]);
                     }}
@@ -178,6 +218,7 @@ export function PortTable({
                     <DropdownItem key="details">{t("details")}</DropdownItem>
                     <DropdownItem key="pid">{t("copyPID")}</DropdownItem>
                     <DropdownItem key="port">{t("copyPort")}</DropdownItem>
+                    <DropdownItem key="local">{t("copyLocal")}</DropdownItem>
                     <DropdownItem
                       key="end"
                       color="danger"
@@ -192,6 +233,7 @@ export function PortTable({
           ))}
         </tbody>
       </table>
+      {empty}
     </div>
   );
 }
