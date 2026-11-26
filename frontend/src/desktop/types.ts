@@ -34,6 +34,13 @@ export interface Fault {
   code: string;
   detail: string;
 }
+export interface ProcessDetails {
+  workingDir: string;
+  workingDirError: Fault | null;
+  parents: Pick<Identity, "pid" | "created" | "name">[] | null;
+  parentsError: Fault | null;
+  error: Fault | null;
+}
 export interface ProcessResult {
   target: Identity;
   status: string;

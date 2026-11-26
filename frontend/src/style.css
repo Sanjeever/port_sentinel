@@ -398,6 +398,31 @@ pre {
   align-items: center;
   gap: 8px;
 }
+.process-context {
+  font-size: 13px;
+}
+.process-context .details-grid {
+  margin-top: 0;
+}
+.process-context-diagnostic pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.details-grid .process-parent-chain {
+  display: block;
+}
+.process-parent-chain li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+}
+.process-parent-chain li .mono {
+  white-space: nowrap;
+}
+.process-parent-chain ol + p {
+  margin-top: 6px;
+}
 .path {
   font-family: monospace;
   font-size: 12px;

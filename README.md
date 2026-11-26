@@ -11,7 +11,7 @@ The original release was featured in Ruan YiFeng's [Technology Enthusiasts Weekl
 ## Features
 
 - TCP/UDP and IPv4/IPv6, listening ports or all connections; local/remote addresses, state, PID, process name and readable executable paths.
-- Search by port, PID or process name; protocol filtering, numeric sorting, row menus, copying and process details.
+- Search by port, PID or process name; protocol filtering, numeric sorting, row menus and copying. Process details include the start time, working directory and current parent chain when available.
 - Select the filtered rows and end deduplicated processes after confirmation. Graceful exit and force termination are separate actions. The app checks process identity before acting and refreshes actual connections afterwards.
 - Configurable automatic refresh.
 - English and Simplified Chinese; light, dark and system themes; saved local preferences and window size.

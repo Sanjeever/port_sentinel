@@ -56,6 +56,11 @@ func (s *Service) State() State {
 	return v
 }
 func (s *Service) Context() context.Context { return s.ctx }
+func (s *Service) ProcessDetails(pid int32, created int64) ports.ProcessDetails {
+	ctx, cancel := context.WithTimeout(s.ctx, 3*time.Second)
+	defer cancel()
+	return ports.DescribeProcess(ctx, pid, created)
+}
 func (s *Service) emit() {
 	if s.Changed != nil {
 		s.Changed()

@@ -1,10 +1,11 @@
-import type { Identity, Preferences, View } from "./types";
+import type { Identity, Preferences, ProcessDetails, View } from "./types";
 
 // 这层是业务适配器；Wails 的生成目录由 wails dev/build 管理。
 export interface Bridge {
   GetState(): Promise<View>;
   Refresh(authorized: boolean): Promise<boolean>;
   CancelTask(): Promise<void>;
+  ProcessDetails(pid: number, created: number): Promise<ProcessDetails>;
   Terminate(targets: Identity[], force: boolean): Promise<boolean>;
   SavePreferences(p: Preferences): Promise<void>;
   SaveWindow(): Promise<void>;

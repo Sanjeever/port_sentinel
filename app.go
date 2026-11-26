@@ -125,6 +125,9 @@ func (a *App) GetState() View {
 }
 func (a *App) Refresh(authorized bool) bool { return a.service.Refresh(authorized) }
 func (a *App) CancelTask()                  { a.service.Cancel() }
+func (a *App) ProcessDetails(pid int32, created int64) ports.ProcessDetails {
+	return a.service.ProcessDetails(pid, created)
+}
 func (a *App) Terminate(targets []ports.Identity, force bool) bool {
 	return a.service.Terminate(targets, force)
 }

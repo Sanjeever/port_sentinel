@@ -52,6 +52,13 @@ beforeEach(() => {
     GetState: vi.fn(async () => state),
     Refresh: vi.fn(async () => true),
     CancelTask: vi.fn(async () => {}),
+    ProcessDetails: vi.fn(async () => ({
+      workingDir: "/projects/admin",
+      workingDirError: null,
+      parents: [{ pid: 10, created: 100, name: "Test Shell" }],
+      parentsError: { code: "permission_denied", detail: "" },
+      error: null,
+    })),
     Terminate: vi.fn(async () => true),
     SavePreferences: vi.fn(async (p) => {
       state = { ...state, preferences: p, sequence: state.sequence + 1 };
@@ -86,6 +93,34 @@ async function start(search = "Search port, PID or process") {
   await screen.findByPlaceholderText(search);
 }
 describe("desktop workspace", () => {
+  it.each([
+    { language: "en" as const, text: en },
+    { language: "zh-CN" as const, text: zh },
+  ])(
+    "reads process context on demand in $language",
+    async ({ language, text }) => {
+      state.preferences.language = language;
+      await start(text.search);
+      expect(bridge.ProcessDetails).not.toHaveBeenCalled();
+      const trigger = screen.getAllByRole("button", { name: "Node" })[0];
+      fireEvent.click(trigger);
+      const dialog = await screen.findByRole("dialog", { name: text.details });
+      await waitFor(() =>
+        expect(within(dialog).getByText("/projects/admin")).toBeVisible(),
+      );
+      expect(bridge.ProcessDetails).toHaveBeenCalledExactlyOnceWith(20, 123);
+      expect(within(dialog).getByText(text.startedAt)).toBeVisible();
+      expect(within(dialog).getByText(text.currentParents)).toBeVisible();
+      expect(within(dialog).getByText("Test Shell")).toBeVisible();
+      expect(
+        within(dialog).getByText(
+          text.parentChainIssue.replace("{{reason}}", text.permission_denied),
+        ),
+      ).toBeVisible();
+      await act(async () => receive({ ...state, sequence: 2 }));
+      expect(bridge.ProcessDetails).toHaveBeenCalledTimes(1);
+    },
+  );
   it.each([
     { language: "en" as const, text: en },
     { language: "zh-CN" as const, text: zh },

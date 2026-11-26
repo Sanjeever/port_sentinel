@@ -145,6 +145,22 @@ func TestRealScanAndOwnedProcessLifecycle(t *testing.T) {
 	if target.Created <= 0 || target.Name == "" {
 		t.Fatalf("missing identity: %+v", target)
 	}
+	details := DescribeProcess(ctx, target.PID, target.Created)
+	if details.Error != nil || len(details.Parents) == 0 || details.Parents[0].PID != int32(os.Getpid()) {
+		t.Fatalf("missing worker parent: %+v", details)
+	}
+	wantDir, err := os.Stat(".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	workerDir, err := os.Stat(details.WorkingDir)
+	if err != nil || !os.SameFile(workerDir, wantDir) {
+		t.Fatalf("worker directory %q: %v (%v)", details.WorkingDir, err, details.WorkingDirError)
+	}
+	mismatch := DescribeProcess(ctx, target.PID, target.Created+1)
+	if mismatch.Error == nil || mismatch.Error.Code != "identity_changed" || mismatch.WorkingDir != "" || len(mismatch.Parents) != 0 {
+		t.Fatalf("details escaped identity check: %+v", mismatch)
+	}
 	op := NewOperator()
 	r := op.Execute(ctx, []Identity{target}, false)
 	if runtime.GOOS == "windows" {
