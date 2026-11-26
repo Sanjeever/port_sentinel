@@ -219,6 +219,12 @@ select {
   min-height: var(--control-height);
   max-width: 100%;
 }
+.work-area {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  border-top: 1px solid var(--line);
+}
 .table-scroll {
   position: relative;
   overflow: auto;
@@ -226,7 +232,6 @@ select {
   min-height: 0;
   min-width: 0;
   container-type: inline-size;
-  border-top: 1px solid var(--line);
   background: var(--surface);
 }
 .table-scroll:focus-visible {
@@ -402,6 +407,12 @@ span.ellipsis {
 .port-table tbody tr[data-selected="true"] {
   background: var(--selected);
 }
+.port-table tbody tr[data-inspected="true"] {
+  background: var(--selected);
+}
+.port-table tbody tr[data-inspected="true"] .select-cell {
+  box-shadow: inset 2px 0 var(--accent);
+}
 .status-bar,
 .status-meta,
 .scan-controls {
@@ -529,10 +540,81 @@ pre {
   color: inherit;
   border-left: 1px solid var(--line);
 }
+.inspector {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 352px;
+  min-width: 0;
+  border-inline-start: 1px solid var(--line);
+  background: var(--surface);
+}
+.inspector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 4px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 600;
+}
+.detail-panel .inspector-header {
+  padding-inline-end: 44px;
+}
+.inspector-header h2 {
+  font-size: inherit;
+}
+.inspector-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 0;
+  display: block;
+}
+.inspector-section {
+  padding: 12px 16px;
+}
+.inspector-section + .inspector-section {
+  border-top: 1px solid var(--line);
+}
+.inspector-section h3 {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.inspector-section .inspector-label {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.endpoint-title,
+.inspector-process {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.endpoint-title > .mono {
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.endpoint-meta {
+  display: flex;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.inspector-process {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
 .details-grid {
   display: grid;
   flex: none;
-  grid-template-columns: minmax(0, 28%) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 32%) minmax(0, 1fr);
   gap: 8px 12px;
   margin-top: 8px;
 }
@@ -561,6 +643,7 @@ pre {
 .process-context {
   flex: none;
   font-size: 13px;
+  margin-top: 8px;
 }
 .process-context-fields dt {
   margin-bottom: 4px;
@@ -589,19 +672,28 @@ pre {
   font-size: 12px;
 }
 .connection-detail {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   font-size: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
-}
-.connection-detail dt {
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-.connection-detail dd {
+  padding: 8px 0;
   overflow-wrap: anywhere;
-  color: var(--muted);
-  font-family: var(--font-data);
-  margin-top: 3px;
+}
+.connection-remote {
+  width: 100%;
+}
+.connection-detail + .connection-detail {
+  border-top: 1px solid var(--line);
+}
+.more-endpoints {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.more-endpoints summary {
+  color: var(--accent);
+  font-size: 12px;
 }
 .settings-fields {
   padding: 12px 0;
@@ -744,6 +836,14 @@ pre {
 @supports not (container-type: inline-size) {
   @media (max-width: 960px) {
     .port-table {
+      --remote-display: none;
+      --state-display: none;
+      --compact-state-display: block;
+      --local-width: 36%;
+    }
+  }
+  @media (min-width: 1120px) and (max-width: 1313px) {
+    .work-area[data-inspecting="true"] .port-table {
       --remote-display: none;
       --state-display: none;
       --compact-state-display: block;

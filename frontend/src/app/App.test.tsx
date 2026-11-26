@@ -105,8 +105,10 @@ describe("desktop workspace", () => {
       await start(text.search);
       expect(bridge.ProcessDetails).not.toHaveBeenCalled();
       const trigger = screen.getAllByRole("button", { name: "Node" })[0];
+      trigger.focus();
       fireEvent.click(trigger);
       const dialog = await screen.findByRole("dialog", { name: text.details });
+      expect(within(dialog).getByText(text.currentEndpoint)).toBeVisible();
       await waitFor(() =>
         expect(within(dialog).getByText("/projects/admin")).toBeVisible(),
       );
@@ -121,6 +123,8 @@ describe("desktop workspace", () => {
       ).toBeVisible();
       await act(async () => receive({ ...state, sequence: 2 }));
       expect(bridge.ProcessDetails).toHaveBeenCalledTimes(1);
+      fireEvent.click(within(dialog).getByRole("button", { name: text.close }));
+      await waitFor(() => expect(trigger).toHaveFocus());
     },
   );
   it.each([

@@ -31,6 +31,7 @@ export default function App() {
   const search = useRef<HTMLInputElement>(null);
   const [selected, setSelected] = useState(new Set<string>());
   const [detail, setDetail] = useState<Entry | null>(null);
+  const detailTrigger = useRef<HTMLElement | null>(null);
   const [settings, setSettings] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [dismissedResultRevision, setDismissedResultRevision] = useState(0);
@@ -220,27 +221,47 @@ export default function App() {
           </Button>
         </div>
       )}
-      <PortTable
-        rows={rows}
-        preferences={view.preferences}
-        selected={selected}
-        setSelected={setSelected}
-        sort={(key) =>
-          save({
-            sort: key,
-            ascending:
-              key === view.preferences.sort
-                ? !view.preferences.ascending
-                : true,
-          })
-        }
-        details={setDetail}
-        end={(entries) => {
-          if (!busy) confirm(entries);
-        }}
-        run={run}
-        empty={empty}
-      />
+      <div className="work-area" data-inspecting={!!detail}>
+        <PortTable
+          rows={rows}
+          preferences={view.preferences}
+          selected={selected}
+          setSelected={setSelected}
+          sort={(key) =>
+            save({
+              sort: key,
+              ascending:
+                key === view.preferences.sort
+                  ? !view.preferences.ascending
+                  : true,
+            })
+          }
+          inspected={detail?.id}
+          details={(entry, trigger) => {
+            detailTrigger.current = trigger;
+            setDetail(entry);
+          }}
+          end={(entries) => {
+            if (!busy) confirm(entries);
+          }}
+          run={run}
+          empty={empty}
+        />
+        <Details
+          entry={detail}
+          entries={view.entries}
+          onClose={() => {
+            setDetail(null);
+            const trigger = detailTrigger.current;
+            detailTrigger.current = null;
+            requestAnimationFrame(() => {
+              if (trigger?.isConnected) trigger.focus({ preventScroll: true });
+              else search.current?.focus();
+            });
+          }}
+          run={run}
+        />
+      </div>
       {view.results.length > 0 &&
         view.resultRevision !== dismissedResultRevision && (
           <ProcessResults
@@ -292,12 +313,6 @@ export default function App() {
           </Switch>
         </div>
       </footer>
-      <Details
-        entry={detail}
-        entries={view.entries}
-        onClose={() => setDetail(null)}
-        run={run}
-      />
       <ProcessDialog
         value={confirmation}
         onClose={() => setConfirmation(null)}

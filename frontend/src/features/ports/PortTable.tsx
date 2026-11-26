@@ -18,6 +18,7 @@ export function PortTable({
   setSelected,
   sort,
   details,
+  inspected,
   end,
   run,
   empty,
@@ -27,7 +28,8 @@ export function PortTable({
   selected: Set<string>;
   setSelected: (v: Set<string>) => void;
   sort: (key: Preferences["sort"]) => void;
-  details: (e: Entry) => void;
+  details: (entry: Entry, trigger: HTMLElement | null) => void;
+  inspected: string | undefined;
   end: (entries: Entry[]) => void;
   run: (f: () => Promise<unknown>) => void;
   empty: ReactNode;
@@ -123,6 +125,7 @@ export function PortTable({
             <tr
               key={e.id}
               data-selected={selected.has(e.id)}
+              data-inspected={inspected === e.id}
               onContextMenu={(event) => {
                 event.preventDefault();
                 setMenu(e.id);
@@ -147,10 +150,12 @@ export function PortTable({
               </th>
               <td className="process-cell">
                 <button
+                  id={`${caption}-process-${e.id}`}
                   type="button"
                   className="process-link"
+                  aria-expanded={inspected === e.id}
                   title={e.process.name || t("details")}
-                  onClick={() => details(e)}
+                  onClick={(event) => details(e, event.currentTarget)}
                 >
                   <span>
                     {e.process.name ||
@@ -208,7 +213,11 @@ export function PortTable({
                       if (key === "port")
                         run(() => backend().Copy(String(e.port)));
                       if (key === "local") run(() => backend().Copy(e.local));
-                      if (key === "details") details(e);
+                      if (key === "details")
+                        details(
+                          e,
+                          document.getElementById(`${caption}-process-${e.id}`),
+                        );
                       if (key === "end") end([e]);
                     }}
                     disabledKeys={
