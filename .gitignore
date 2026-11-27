@@ -7,6 +7,7 @@
 frontend/node_modules/
 frontend/dist/
 frontend/wailsjs/
+frontend/test-results/
 frontend/package.json.md5
 build/bin/
 build/darwin/Info.dev.plist

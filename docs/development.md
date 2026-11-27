@@ -31,11 +31,20 @@ pnpm bindings
 
 原生构建产物位于 `build/bin/`。本地与 CI 都用 `pnpm verify` 安装锁定的依赖并运行前端类型检查、测试和真实构建，再运行[版本与 Go 检查](../scripts/check.mjs)。检查两份 `packageManager` 声明是否一致，并执行 Go 格式检查、测试与 vet。日常可按改动范围运行单项检查。
 
-`pnpm format` 用 Oxfmt 格式化前端源码，`pnpm format:check` 检查格式并纳入 `pnpm verify`。格式规则见[前端配置](../frontend/.oxfmtrc.json)。
+`pnpm format` 用 Oxfmt 格式化前端源码、浏览器测试和 Vite、Playwright 配置。`pnpm format:check` 检查格式并纳入 `pnpm verify`。[Oxfmt 配置](../frontend/.oxfmtrc.json)
 
-`pnpm lint` 用 Oxlint 检查前端源码和开发脚本，启用正确性和 React Hooks 规则。Hooks 依赖按实际读取的值声明，避免不相关的状态更新重复触发副作用。TypeScript 类型检查继续由 `tsc` 执行。[Oxlint 配置](../frontend/.oxlintrc.json)
+`pnpm lint` 用 Oxlint 检查前端源码、浏览器测试和开发脚本，启用正确性和 React Hooks 规则。Hooks 依赖按实际读取的值声明，避免不相关的状态更新重复触发副作用。TypeScript 类型检查继续由 `tsc` 执行。[Oxlint 配置](../frontend/.oxlintrc.json)
 
 普通 CI 在 Ubuntu 24.04 额外运行 `go test -race ./internal/service ./internal/update`，用现有测试覆盖扫描串行、任务取消和更新流程中的并发访问。手动运行竞态检查需要启用 CGO 并安装 C 编译器。
+
+浏览器回归使用 Chromium 打开实际前端，用替身提供桌面桥接数据。测试覆盖英文窄窗口中的键盘搜索、本地地址和状态显示、详情打开与关闭后的焦点恢复。Ubuntu 24.04 的普通 CI 会运行这项检查，失败时上传截图和 trace。WebView、系统授权和进程操作由原生验收覆盖。[Playwright 配置](../frontend/playwright.config.ts)
+
+本地安装锁定的前端依赖后，可单独运行浏览器回归：
+
+```sh
+pnpm --dir frontend exec playwright install --only-shell chromium
+pnpm test:ui
+```
 
 `pnpm dev`、`pnpm build` 和 `pnpm bindings` 都会生成 `frontend/wailsjs`。该目录与 `frontend/dist` 不提交。前端通过业务适配器访问桌面桥接，单独运行 Vite 不提供 Go 系统能力。桥接接口变更需核对 Go 导出定义与前端手写类型，不能依赖生成目录自动同步业务类型。
 

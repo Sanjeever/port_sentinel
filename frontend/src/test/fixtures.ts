@@ -1,4 +1,4 @@
-import type { Entry, Preferences } from "../desktop/types";
+import type { Entry, Preferences, View } from "../desktop/types";
 export const preferences: Preferences = {
   language: "en",
   theme: "system",
@@ -12,6 +12,37 @@ export const preferences: Preferences = {
   height: 760,
   autoUpdate: true,
 };
+
+export function initialView(entries: Entry[]): View {
+  return {
+    closeBlocked: false,
+    entries,
+    visibility: "ordinary",
+    lastSuccess: "2026-10-22T01:00:00Z",
+    stale: false,
+    task: "",
+    error: null,
+    settingsError: null,
+    preferences: { ...preferences },
+    results: [],
+    endpoints: [],
+    resultRevision: 0,
+    build: { version: "2.0.0", commit: "abcdef", development: true },
+    update: {
+      phase: "",
+      error: "",
+      errorCode: "",
+      version: "",
+      notes: "",
+      url: "",
+      checked_at: null,
+      downloaded: 0,
+      total: 0,
+    },
+    sequence: 1,
+  };
+}
+
 export function row(
   id: string,
   port: number,

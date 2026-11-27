@@ -4,6 +4,7 @@ export default defineConfig({
   plugins: [react()],
   build: { target: "safari15" },
   test: {
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     restoreMocks: true,

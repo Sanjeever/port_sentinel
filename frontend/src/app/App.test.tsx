@@ -12,43 +12,17 @@ import { HeroUIProvider } from "@heroui/react";
 import App from "./App";
 import i18n, { en, zh } from "../i18n";
 import type { View } from "../desktop/types";
-import { row, preferences } from "../test/fixtures";
+import { initialView, row } from "../test/fixtures";
 import type { Bridge } from "../desktop/api";
 let state: View;
 let bridge: Bridge;
 let receive: (v: View) => void;
 beforeEach(() => {
-  state = {
-    closeBlocked: false,
-    entries: [
-      row("a", 8080, 20, "Node"),
-      row("b", 5353, 21, "Resolver", "UDP", "BOUND"),
-      row("c", 9000, 20, "Node"),
-    ],
-    visibility: "ordinary",
-    lastSuccess: "2026-10-22T01:00:00Z",
-    stale: false,
-    task: "",
-    error: null,
-    settingsError: null,
-    preferences: { ...preferences },
-    results: [],
-    endpoints: [],
-    resultRevision: 0,
-    build: { version: "2.0.0", commit: "abcdef", development: true },
-    update: {
-      phase: "",
-      error: "",
-      errorCode: "",
-      version: "",
-      notes: "",
-      url: "",
-      checked_at: null,
-      downloaded: 0,
-      total: 0,
-    },
-    sequence: 1,
-  };
+  state = initialView([
+    row("a", 8080, 20, "Node"),
+    row("b", 5353, 21, "Resolver", "UDP", "BOUND"),
+    row("c", 9000, 20, "Node"),
+  ]);
   bridge = {
     ExitWithoutSaving: vi.fn(async () => {}),
     GetState: vi.fn(async () => state),
