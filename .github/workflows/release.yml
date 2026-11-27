@@ -22,15 +22,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version: '1.23.12'
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
       - uses: pnpm/action-setup@v4
         with:
           package_json_file: frontend/package.json
       - uses: actions/setup-node@v4
         with:
-          node-version: '26'
+          node-version-file: .node-version
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
       - name: 检查标签与版本
@@ -42,12 +43,10 @@ jobs:
       - name: 验证
         shell: bash
         run: sh scripts/check.sh
-      - run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
       - name: 构建正式版
-        shell: bash
         env:
           PORT_SENTINEL_RELEASE_BUILD: 'true'
-        run: sh scripts/desktop.sh build -clean -platform '${{ matrix.platform }}'
+        run: pnpm build -clean -platform '${{ matrix.platform }}'
       - name: macOS 签名与公证
         if: runner.os == 'macOS'
         shell: bash

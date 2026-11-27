@@ -2,6 +2,8 @@ module github.com/Sanjeever/port_sentinel
 
 go 1.23.0
 
+toolchain go1.23.12
+
 require (
 	github.com/go-ole/go-ole v1.3.0
 	github.com/shirou/gopsutil/v4 v4.25.1

@@ -4,7 +4,7 @@
 
 ## 环境与常用入口
 
-Go 版本要求见 [go.mod](../go.mod)，CI 使用的 Go/Node 版本见[检查工作流](../.github/workflows/check.yml)。pnpm 版本由[根目录](../package.json)和[前端](../frontend/package.json)的 `packageManager` 声明，依赖精确版本来自 Go Modules 和前端锁文件。
+Go 最低版本和 CI 使用的工具链见 [go.mod](../go.mod)，Windows 与 macOS 可按 [.node-version](../.node-version) 选用与 CI 相同的 Node 主版本。pnpm 版本由[根目录](../package.json)和[前端](../frontend/package.json)的 `packageManager` 声明，依赖精确版本来自 Go Modules 和前端锁文件。
 
 macOS 需要 Xcode Command Line Tools，Windows 需要 WebView2，Ubuntu 需要 `libgtk-3-dev` 与 `libwebkit2gtk-4.1-dev`。Linux 授权操作另需 polkit 和运行中的图形认证代理。
 
@@ -73,7 +73,7 @@ node scripts/version.mjs check v<version>
 
 将版本文件和对应日志放在同一提交。脚本验证正式版本格式、两份版本一致和日志存在且非空；双语内容与同提交要求由评审确认。`docs/releases/` 记录各版本变化，`CHANGELOG.md` 保留 Flutter 1.x 历史。Go + Wails 首版为 2.0.0，Flutter 1.x 用户需手动迁移，不覆盖既有标签、Release 或附件。
 
-构建方式与发布渠道分开：`desktop.sh build` 默认仍是开发构建，禁用更新。发布工作流通过 `PORT_SENTINEL_RELEASE_BUILD=true` 注入正式构建标记，供版本信息和更新能力使用。构建参数及提交信息注入以 [desktop.sh](../scripts/desktop.sh) 和 [version.go](../version.go) 为准。
+`pnpm build` 默认生成禁用更新的开发构建。发布工作流通过 `PORT_SENTINEL_RELEASE_BUILD=true` 注入正式构建标记，供版本信息和更新能力使用。构建参数及提交信息注入以 [desktop.mjs](../scripts/desktop.mjs) 和 [version.go](../version.go) 为准。
 
 发布需另获明确授权。[普通 CI](../.github/workflows/check.yml) 定义提交与 PR 的原生验证矩阵；[发布 CI](../.github/workflows/release.yml) 由正式 `v*` 标签触发，验证版本、检查、构建并打包。所有平台附件成功后才创建草稿、带齐附件并公开 Release，写入权限限定于发布任务。矩阵、附件命名和打包布局以工作流为准；修改时同时核对 `internal/update/` 的附件匹配与解包契约。
 
