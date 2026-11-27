@@ -4,39 +4,39 @@
 
 ## 环境与常用入口
 
-Go 版本要求见 [go.mod](../go.mod)，CI 使用的 Go/Node 版本见[检查工作流](../.github/workflows/check.yml)。pnpm 版本来自 [frontend/package.json](../frontend/package.json) 的 `packageManager`，依赖精确版本来自 Go Modules 和前端锁文件。Wails CLI 版本需与 `go.mod` 的 Wails v2 依赖一致；两份工作流包含对应安装命令。
+Go 版本要求见 [go.mod](../go.mod)，CI 使用的 Go/Node 版本见[检查工作流](../.github/workflows/check.yml)。pnpm 版本由[根目录](../package.json)和[前端](../frontend/package.json)的 `packageManager` 声明，依赖精确版本来自 Go Modules 和前端锁文件。
 
-macOS 需要 Xcode Command Line Tools，Windows 需要 WebView2，Ubuntu 需要 `libgtk-3-dev` 与 `libwebkit2gtk-4.1-dev`。Linux 授权操作另需 polkit 和运行中的图形认证代理。Windows 在 Git Bash 执行下面的 shell 命令。
+macOS 需要 Xcode Command Line Tools，Windows 需要 WebView2，Ubuntu 需要 `libgtk-3-dev` 与 `libwebkit2gtk-4.1-dev`。Linux 授权操作另需 polkit 和运行中的图形认证代理。
 
-在仓库根目录安装匹配版本的 Wails CLI。以下 Bash 命令从 Go Modules 读取版本；macOS 26 上先按下文设置外部链接参数：
+在 Windows PowerShell 或 macOS、Linux 终端中进入仓库根目录，运行：
 
 ```sh
-go install github.com/wailsapp/wails/v2/cmd/wails@$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v2)
+pnpm dev
 ```
 
-然后执行：
+启动时，[启动脚本](../scripts/desktop.mjs)会把 `go.mod` 指定版本的 Wails CLI 安装到 `.tools/`，后续复用版本匹配的二进制。Wails 根据 [wails.json](../wails.json) 安装和构建前端并启动 Vite。按 `Ctrl+C` 停止开发进程。
 
 ```sh
-pnpm --dir frontend install --frozen-lockfile
-sh scripts/desktop.sh dev
-```
-
-```sh
-sh scripts/check.sh
-sh scripts/desktop.sh build -clean
+pnpm wails:doctor
+pnpm build -clean
 # 在 macOS 构建 Intel 与 Apple Silicon 通用包
-sh scripts/desktop.sh build -clean -platform darwin/universal
+pnpm build -clean -platform darwin/universal
+
+# 单独生成绑定时先准备嵌入资源
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend build
+pnpm bindings
 ```
 
-[desktop.sh](../scripts/desktop.sh) 是开发、原生构建与绑定生成的入口；[check.sh](../scripts/check.sh) 安装锁定依赖，执行前端类型检查、测试和真实构建，然后检查版本、Go 格式、测试与 vet。实际步骤以脚本为准。原生构建产物位于 `build/bin/`。
+原生构建产物位于 `build/bin/`。[check.sh](../scripts/check.sh) 安装锁定依赖，执行前端类型检查、测试和真实构建，再检查版本、Go 格式、测试与 vet。在 Windows 使用 Git Bash 执行 `sh scripts/check.sh`。
 
-Wails 在 dev/build 或 `sh scripts/desktop.sh generate` 时生成 `frontend/wailsjs`。该目录与 `frontend/dist` 不提交。前端通过业务适配器访问桌面桥接，单独运行 Vite 不提供 Go 系统能力。桥接接口变更需核对 Go 导出定义与前端手写类型，不能依赖生成目录自动同步业务类型。
+`pnpm dev`、`pnpm build` 和 `pnpm bindings` 都会生成 `frontend/wailsjs`。该目录与 `frontend/dist` 不提交。前端通过业务适配器访问桌面桥接，单独运行 Vite 不提供 Go 系统能力。桥接接口变更需核对 Go 导出定义与前端手写类型，不能依赖生成目录自动同步业务类型。
 
 ## 平台兼容背景
 
 - Go 根包嵌入真实 `frontend/dist`，直接运行 Go 检查前先执行 `pnpm --dir frontend build`，不能创建假占位产物。
 - Linux 使用 WebKitGTK 4.1，桌面相关 Go 检查、绑定生成与 Wails 构建应一致使用 `webkit2_41`。检查和桌面脚本已处理标签；直接运行时使用 `go test -tags webkit2_41 ./...`、`go vet -tags webkit2_41 ./...`。
-- macOS 部署目标覆盖 CGO 编译、链接与应用元数据。脚本同时设置这些目标，避免二进制所需版本高于声明版本。Go 1.23 在 macOS 26 上需要外部链接，脚本保留此兼容处理；在该环境安装 Wails CLI 时，也为对应 `go install` 命令设置 `GOFLAGS=-ldflags=-linkmode=external`。升级工具链后可根据原生验证重新评估此处理。
+- macOS 部署目标覆盖 CGO 编译、链接与应用元数据。脚本同时设置这些目标，避免二进制所需版本高于声明版本。Go 1.23 在 macOS 26 上需要外部链接，启动脚本为 CLI 安装与桌面构建保留此兼容处理。升级工具链后可根据原生验证重新评估此处理。
 - macOS 图标处理保留在 [darwin-icon.sh](../scripts/darwin-icon.sh)。它补全 Finder 需要的标准倍率图层，修改包资源后重新签名；不能把该临时签名当作 Developer ID 签名或公证。
 
 ## 配置与隔离验证
@@ -48,7 +48,14 @@ Wails 在 dev/build 或 `sh scripts/desktop.sh generate` 时生成 `frontend/wai
 开发构建可将 `PORT_SENTINEL_CONFIG_DIR` 指向专用目录，实际文件为该目录下的 `settings.json`。例如在 Bash 中启动开发窗口：
 
 ```sh
-PORT_SENTINEL_CONFIG_DIR="$(mktemp -d)" sh scripts/desktop.sh dev
+PORT_SENTINEL_CONFIG_DIR="$(mktemp -d)" pnpm dev
+```
+
+在 PowerShell 中可使用独立目录。退出后清除当前终端里的变量。
+
+```powershell
+$env:PORT_SENTINEL_CONFIG_DIR = (New-Item -ItemType Directory -Path (Join-Path ([IO.Path]::GetTempPath()) "port-sentinel-$([guid]::NewGuid())")).FullName
+try { pnpm dev } finally { Remove-Item Env:PORT_SENTINEL_CONFIG_DIR }
 ```
 
 正式构建忽略此变量，始终使用当前用户配置目录，不能依靠它隔离正式包。更新安装测试应使用独立安装目录与本地 HTTP 服务，不能替换正在使用的程序；进程测试只能操作测试自行创建的进程和监听端口。Go 生命周期测试位于 `internal/ports/`，前端交互测试使用桥接替身，后者不证明真实系统操作可用。

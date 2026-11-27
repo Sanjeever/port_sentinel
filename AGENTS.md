@@ -39,7 +39,7 @@ Port Sentinel 用于定位端口冲突、查看连接和管理相关进程。工
 
 ## 开发与验收
 
-- 常用入口为 `sh scripts/desktop.sh dev`、`sh scripts/desktop.sh build -clean` 和 `sh scripts/check.sh`。依赖安装、平台差异及隔离测试见开发文档；Windows 在 Git Bash 运行脚本。
+- 常用入口为 `pnpm dev`、`pnpm build -clean` 和 `sh scripts/check.sh`。Windows 可在 PowerShell 启动和构建桌面，在 Git Bash 运行检查脚本。依赖安装、平台差异及隔离测试见开发文档。
 - 按语义影响选择最小有效验证。Go 修改执行相关格式检查、`go test ./...`、`go vet ./...`；前端修改按范围执行 `pnpm --dir frontend typecheck`、`test`、`build`。平台标签和嵌入产物前提见开发文档。
 - 修改扫描、进程操作、授权、设置或更新行为时，维护有价值的回归测试；前端覆盖受影响的关键交互和双语。桌面行为变更按环境完成原生构建与真实界面检查，英文与窄窗口布局纳入 UI 验证。
 - 进程集成测试只能操作自行创建的进程和监听端口。设置测试使用临时目录，更新测试使用隔离目录和本地 HTTP 服务，不操作用户真实进程、配置或正在使用的程序。

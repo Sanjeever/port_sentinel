@@ -35,19 +35,18 @@ Packages are portable archives. Extract the whole package to a writable location
 
 ## Development
 
-Set up Go, Node, pnpm, the matching Wails CLI and platform dependencies using the [development guide](docs/development.md). Run these commands from the repository root, using Git Bash on Windows:
+Set up Go, Node, pnpm and the platform dependencies in the [development guide](docs/development.md). From the repository root, start the desktop app in PowerShell on Windows or a terminal on macOS and Linux:
 
 ```sh
-pnpm --dir frontend install --frozen-lockfile
-sh scripts/desktop.sh dev
+pnpm dev
 ```
 
 ```sh
+pnpm build -clean
 sh scripts/check.sh
-sh scripts/desktop.sh build -clean
 ```
 
-For macOS Universal builds, isolated desktop testing, configuration recovery and release preparation, see the development guide. Default local builds have update checks and installation disabled.
+The launcher installs the matching Wails CLI into `.tools/`. Run the check script in Git Bash on Windows. For macOS Universal builds, isolated desktop testing, configuration recovery and release preparation, see the development guide. Default local builds have update checks and installation disabled.
 
 ## Project structure and documentation
 

@@ -35,19 +35,18 @@
 
 ## 开发
 
-按[开发文档](docs/development.md)准备 Go、Node、pnpm、匹配版本的 Wails CLI 和平台依赖。在仓库根目录执行以下命令，Windows 使用 Git Bash：
+按[开发文档](docs/development.md)准备 Go、Node、pnpm 和平台依赖。在 Windows PowerShell 或 macOS、Linux 终端中进入仓库根目录，启动桌面应用：
 
 ```sh
-pnpm --dir frontend install --frozen-lockfile
-sh scripts/desktop.sh dev
+pnpm dev
 ```
 
 ```sh
+pnpm build -clean
 sh scripts/check.sh
-sh scripts/desktop.sh build -clean
 ```
 
-macOS Universal 构建、隔离桌面测试、配置恢复和发布准备见开发文档。本地默认构建禁用更新检查与安装。
+启动脚本会把匹配版本的 Wails CLI 安装到 `.tools/`。Windows 使用 Git Bash 运行检查脚本。macOS Universal 构建、隔离桌面测试、配置恢复和发布准备见开发文档。本地默认构建禁用更新检查与安装。
 
 ## 项目结构与文档
 
