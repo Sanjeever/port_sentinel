@@ -7,6 +7,8 @@
     "build": "node scripts/desktop.mjs build",
     "bindings": "node scripts/desktop.mjs generate",
     "wails:doctor": "node scripts/desktop.mjs doctor",
-    "verify": "pnpm --dir frontend install --frozen-lockfile && pnpm --dir frontend typecheck && pnpm --dir frontend test && pnpm --dir frontend build && node scripts/check.mjs"
+    "format": "pnpm --dir frontend format",
+    "format:check": "pnpm --dir frontend format:check",
+    "verify": "pnpm --dir frontend install --frozen-lockfile && pnpm format:check && pnpm --dir frontend typecheck && pnpm --dir frontend test && pnpm --dir frontend build && node scripts/check.mjs"
   }
 }
