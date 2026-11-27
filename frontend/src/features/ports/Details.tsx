@@ -126,6 +126,7 @@ export function Details({
     () => window.matchMedia(wideInspector).matches,
   );
   const close = useRef<HTMLButtonElement>(null);
+  const entryId = entry?.id;
   useEffect(() => {
     const media = window.matchMedia(wideInspector);
     const resize = () => setWide(media.matches);
@@ -133,8 +134,9 @@ export function Details({
     return () => media.removeEventListener("change", resize);
   }, []);
   useEffect(() => {
-    if (wide && entry) close.current?.focus({ preventScroll: true });
-  }, [wide, entry?.id]);
+    if (wide && entryId !== undefined)
+      close.current?.focus({ preventScroll: true });
+  }, [wide, entryId]);
 
   if (!entry) return null;
   const current = entries.find((candidate) => candidate.id === entry.id);

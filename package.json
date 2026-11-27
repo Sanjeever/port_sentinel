@@ -9,6 +9,7 @@
     "wails:doctor": "node scripts/desktop.mjs doctor",
     "format": "pnpm --dir frontend format",
     "format:check": "pnpm --dir frontend format:check",
-    "verify": "pnpm --dir frontend install --frozen-lockfile && pnpm format:check && pnpm --dir frontend typecheck && pnpm --dir frontend test && pnpm --dir frontend build && node scripts/check.mjs"
+    "lint": "node frontend/node_modules/oxlint/bin/oxlint --config frontend/.oxlintrc.json frontend/src scripts",
+    "verify": "pnpm --dir frontend install --frozen-lockfile && pnpm format:check && pnpm lint && pnpm --dir frontend typecheck && pnpm --dir frontend test && pnpm --dir frontend build && node scripts/check.mjs"
   }
 }

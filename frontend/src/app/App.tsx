@@ -37,32 +37,34 @@ export default function App() {
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [dismissedResultRevision, setDismissedResultRevision] = useState(0);
   const p = view?.preferences;
+  const language = p?.language;
+  const theme = p?.theme;
+  const entries = view?.entries;
   const save = usePreferenceSave(p, run);
   useEffect(() => {
-    if (p) {
-      void i18n.changeLanguage(resolveLanguage(p.language));
-      document.documentElement.lang = resolveLanguage(p.language);
-    }
-  }, [p?.language]);
+    if (language === undefined) return;
+    const resolved = resolveLanguage(language);
+    void i18n.changeLanguage(resolved);
+    document.documentElement.lang = resolved;
+  }, [language]);
   useEffect(() => {
-    if (!p) return;
+    if (theme === undefined) return;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const apply = () => {
-      const dark =
-        p.theme === "dark" || (p.theme === "system" && media.matches);
+      const dark = theme === "dark" || (theme === "system" && media.matches);
       document.documentElement.classList.toggle("dark", dark);
       document.documentElement.dataset.theme = dark ? "dark" : "light";
     };
     apply();
     media.addEventListener("change", apply);
     return () => media.removeEventListener("change", apply);
-  }, [p?.theme]);
+  }, [theme]);
   useEffect(() => {
-    if (view) setSelected((old) => retainSelection(old, view.entries));
-  }, [view?.entries]);
+    if (entries) setSelected((old) => retainSelection(old, entries));
+  }, [entries]);
   const rows = useMemo(
-    () => (view && p ? visibleEntries(view.entries, p, query) : []),
-    [view?.entries, p, query],
+    () => (entries && p ? visibleEntries(entries, p, query) : []),
+    [entries, p, query],
   );
   if (!view)
     return (
