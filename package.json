@@ -6,6 +6,7 @@
     "dev": "node scripts/desktop.mjs dev",
     "build": "node scripts/desktop.mjs build",
     "bindings": "node scripts/desktop.mjs generate",
-    "wails:doctor": "node scripts/desktop.mjs doctor"
+    "wails:doctor": "node scripts/desktop.mjs doctor",
+    "verify": "pnpm --dir frontend install --frozen-lockfile && pnpm --dir frontend typecheck && pnpm --dir frontend test && pnpm --dir frontend build && node scripts/check.mjs"
   }
 }

@@ -42,11 +42,11 @@ pnpm dev
 ```
 
 ```sh
+pnpm verify
 pnpm build -clean
-sh scripts/check.sh
 ```
 
-The launcher installs the matching Wails CLI into `.tools/`. Run the check script in Git Bash on Windows. For macOS Universal builds, isolated desktop testing, configuration recovery and release preparation, see the development guide. Default local builds have update checks and installation disabled.
+The launcher installs the matching Wails CLI into `.tools/`. For macOS Universal builds, isolated desktop testing, configuration recovery and release preparation, see the development guide. Default local builds have update checks and installation disabled.
 
 ## Project structure and documentation
 

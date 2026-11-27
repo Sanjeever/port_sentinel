@@ -18,6 +18,7 @@ pnpm dev
 
 ```sh
 pnpm wails:doctor
+pnpm verify
 pnpm build -clean
 # 在 macOS 构建 Intel 与 Apple Silicon 通用包
 pnpm build -clean -platform darwin/universal
@@ -28,7 +29,7 @@ pnpm --dir frontend build
 pnpm bindings
 ```
 
-原生构建产物位于 `build/bin/`。[check.sh](../scripts/check.sh) 安装锁定依赖，执行前端类型检查、测试和真实构建，再检查版本、Go 格式、测试与 vet。在 Windows 使用 Git Bash 执行 `sh scripts/check.sh`。
+原生构建产物位于 `build/bin/`。本地与 CI 都用 `pnpm verify` 安装锁定的依赖并运行前端类型检查、测试和真实构建，再运行[版本与 Go 检查](../scripts/check.mjs)。检查两份 `packageManager` 声明是否一致，并执行 Go 格式检查、测试与 vet。日常可按改动范围运行单项检查。
 
 `pnpm dev`、`pnpm build` 和 `pnpm bindings` 都会生成 `frontend/wailsjs`。该目录与 `frontend/dist` 不提交。前端通过业务适配器访问桌面桥接，单独运行 Vite 不提供 Go 系统能力。桥接接口变更需核对 Go 导出定义与前端手写类型，不能依赖生成目录自动同步业务类型。
 

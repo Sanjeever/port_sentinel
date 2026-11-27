@@ -42,11 +42,11 @@ pnpm dev
 ```
 
 ```sh
+pnpm verify
 pnpm build -clean
-sh scripts/check.sh
 ```
 
-启动脚本会把匹配版本的 Wails CLI 安装到 `.tools/`。Windows 使用 Git Bash 运行检查脚本。macOS Universal 构建、隔离桌面测试、配置恢复和发布准备见开发文档。本地默认构建禁用更新检查与安装。
+启动脚本会把匹配版本的 Wails CLI 安装到 `.tools/`。macOS Universal 构建、隔离桌面测试、配置恢复和发布准备见开发文档。本地默认构建禁用更新检查与安装。
 
 ## 项目结构与文档
 

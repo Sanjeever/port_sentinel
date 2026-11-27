@@ -41,7 +41,6 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libgtk-3-dev libwebkit2gtk-4.1-dev
       - name: 验证
-        shell: bash
-        run: sh scripts/check.sh
+        run: pnpm verify
       - name: 原生构建
         run: pnpm build -clean -platform '${{ matrix.platform }}'

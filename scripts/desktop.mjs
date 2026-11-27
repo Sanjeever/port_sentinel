@@ -3,6 +3,7 @@ import {existsSync, mkdirSync} from 'node:fs';
 import {constants} from 'node:os';
 import {delimiter, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {platformGoEnv} from './go-env.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const windows = process.platform === 'win32';
@@ -36,22 +37,9 @@ function installWails(env) {
 
 function run() {
   const [action, ...args] = process.argv.slice(2);
-  const env = {...process.env};
+  const env = platformGoEnv();
   const pathKey = Object.keys(env).find((key) => key.toLowerCase() === 'path') ?? 'PATH';
   env[pathKey] = `${tools}${delimiter}${env[pathKey] ?? ''}`;
-
-  const tags = [];
-  const linkFlags = [];
-  if (process.platform === 'darwin') {
-    env.MACOSX_DEPLOYMENT_TARGET = '12.0';
-    env.CGO_CFLAGS = `${env.CGO_CFLAGS ?? ''} -mmacosx-version-min=12.0`.trim();
-    env.CGO_LDFLAGS = `${env.CGO_LDFLAGS ?? ''} -mmacosx-version-min=12.0`.trim();
-    env.GOFLAGS = `${env.GOFLAGS ?? ''} -ldflags=-linkmode=external`.trim();
-    linkFlags.push('-linkmode=external');
-  } else if (process.platform === 'linux') {
-    env.GOFLAGS = `${env.GOFLAGS ?? ''} -tags=webkit2_41`.trim();
-    tags.push('-tags', 'webkit2_41');
-  }
 
   let command;
   switch (action) {
@@ -59,6 +47,8 @@ function run() {
     case 'build': {
       const commit = readCommand('git', ['rev-parse', 'HEAD'], env);
       const releaseBuild = env.PORT_SENTINEL_RELEASE_BUILD || 'false';
+      const tags = process.platform === 'linux' ? ['-tags', 'webkit2_41'] : [];
+      const linkFlags = process.platform === 'darwin' ? ['-linkmode=external'] : [];
       linkFlags.push(`-X main.releaseBuild=${releaseBuild}`, `-X main.buildCommit=${commit}`);
       command = [action, '-nosyncgomod', ...args, ...tags, '-ldflags', linkFlags.join(' ')];
       break;
